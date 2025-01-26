@@ -1,6 +1,8 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HttpExceptionFilter, ResponseInterceptor } from 'libs/helpers/src';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +14,12 @@ async function bootstrap() {
     credentials: true,
   });
 
+  // Global pipes, filters and interceptors
+  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor(new Reflector()));
+
+  // Configure Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('QueueEase API')
     .setDescription('The QueueEase API description')
@@ -23,6 +31,8 @@ async function bootstrap() {
     .addBearerAuth()
     .addTag('QueueEase')
     .build();
+
+  // Serve Swagger documentation at /docs
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
