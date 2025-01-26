@@ -4,6 +4,7 @@ import { PrismaService } from 'libs/helpers/src';
 import { ConfigService } from '@nestjs/config';
 import { LoginAdminDto } from './dto';
 import { compareSync } from 'bcrypt';
+import { omit } from 'lodash';
 
 @Injectable()
 export class AdminService {
@@ -46,6 +47,6 @@ export class AdminService {
     if (!admin) {
       throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
     }
-    return admin;
+    return omit(admin, ['id', 'password', 'createdAt', 'updatedAt']);
   }
 }

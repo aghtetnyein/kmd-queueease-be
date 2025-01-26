@@ -7,12 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums for roles and statuses
-enum Role {
-  ADMIN
-  CUSTOMER
-}
-
 enum QueueProgressStatus {
   PENDING
   CONFIRMED
@@ -32,7 +26,6 @@ model Admin {
   email    String  @unique
   password String
   phoneNo  String?
-  role     Role    @default(ADMIN)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -40,12 +33,12 @@ model Admin {
 
 // Customer model
 model Customer {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  name     String
-  email    String  @unique
-  password String
-  phoneNo  String?
-  role     Role    @default(CUSTOMER)
+  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  email            String  @unique
+  password         String
+  name             String
+  phoneNo          String?
+  isAccountCreated Boolean @default(false)
 
   orders        Order[]
   queues        Queue[]
@@ -63,25 +56,12 @@ model Restaurant {
   qrCode     String
   sharedLink String
 
-  resources     Resource[]
+  meals         Meal[]
+  tables        Table[]
+  staff         Staff[]
   orders        Order[]
   queues        Queue[]
   notifications Notification[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Resource model
-model Resource {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  restaurantId String     @db.ObjectId
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  meals  Meal[]
-  tables Table[]
-  staff  Staff[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,8 +73,8 @@ model Meal {
   name  String
   price Float
 
-  resourceId String   @db.ObjectId
-  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   orderMeals OrderMeal[]
 
@@ -108,8 +88,8 @@ model Table {
   tableNo   String
   tableSize Int
 
-  resourceId String   @db.ObjectId
-  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   orders Order[]
 
@@ -122,8 +102,8 @@ model Staff {
   id   String @id @default(auto()) @map("_id") @db.ObjectId
   name String
 
-  resourceId String   @db.ObjectId
-  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -173,45 +153,16 @@ model Queue {
   customerId   String     @db.ObjectId
   customer     Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  status         QueueStatus
-  progressStatus QueueProgressStatus
-  partySize      Int
-  waitTime       Int
-  position       Int
+  status               QueueStatus
+  progressStatus       QueueProgressStatus
+  partySize            Int
+  waitTime             Int
+  position             Int
+  timeSlot             DateTime?
+  slotSizeInMin        Int?
+  bookingholdTimeInMin Int?
 
-  orders   Order[]
-  booking  Booking?
-  waitlist Waitlist?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Booking model
-model Booking {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  queueId String @unique @db.ObjectId
-  queue   Queue  @relation(fields: [queueId], references: [id], onDelete: Cascade)
-
-  partySize Int
-  waitTime  Int
-  position  Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Waitlist model
-model Waitlist {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  queueId String @unique @db.ObjectId
-  queue   Queue  @relation(fields: [queueId], references: [id], onDelete: Cascade)
-
-  partySize Int
-  waitTime  Int
-  position  Int
+  orders Order[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

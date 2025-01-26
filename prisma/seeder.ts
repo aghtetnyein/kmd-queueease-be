@@ -7,14 +7,11 @@ async function main() {
   // Define an array of model names in the order they should be cleared
   const models = [
     'notification',
-    'booking',
-    'waitlist',
     'meal',
     'order',
     'queue',
     'table',
     'staff',
-    'resource',
     'restaurant',
     'customer',
     'admin',
@@ -56,19 +53,12 @@ async function main() {
     },
   });
 
-  // Create Resources
-  const resource = await prisma.resource.create({
-    data: {
-      restaurantId: restaurant.id,
-    },
-  });
-
   // Create a Table
   const table = await prisma.table.create({
     data: {
       tableNo: 'A1',
       tableSize: 4,
-      resourceId: resource.id,
+      restaurantId: restaurant.id,
     },
   });
 
@@ -76,7 +66,7 @@ async function main() {
   const staff = await prisma.staff.create({
     data: {
       name: 'Jane Smith',
-      resourceId: resource.id,
+      restaurantId: restaurant.id,
     },
   });
 
@@ -87,26 +77,6 @@ async function main() {
       customerId: customer.id,
       status: 'WAITLIST',
       progressStatus: 'PENDING',
-      partySize: 2,
-      waitTime: 15,
-      position: 1,
-    },
-  });
-
-  // Create a Booking
-  const booking = await prisma.booking.create({
-    data: {
-      queueId: queue.id,
-      partySize: 2,
-      waitTime: 15,
-      position: 1,
-    },
-  });
-
-  // Create a Waitlist
-  const waitlist = await prisma.waitlist.create({
-    data: {
-      queueId: queue.id,
       partySize: 2,
       waitTime: 15,
       position: 1,
@@ -127,7 +97,7 @@ async function main() {
     data: {
       name: 'Pasta',
       price: 12.99,
-      resourceId: resource.id,
+      restaurantId: restaurant.id,
     },
   });
 
@@ -135,7 +105,7 @@ async function main() {
     data: {
       name: 'Pizza',
       price: 15.99,
-      resourceId: resource.id,
+      restaurantId: restaurant.id,
     },
   });
 

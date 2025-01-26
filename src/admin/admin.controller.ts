@@ -12,12 +12,13 @@ import {
 import { AdminService } from './admin.service';
 import { LoginAdminDto } from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { ApiBearerAuth, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'libs/helpers/src/http-exception.filter';
 import { JwtService } from '@nestjs/jwt';
 
 @Controller('admin')
 @UseFilters(HttpExceptionFilter)
+@ApiTags('Admin')
 export class AdminController {
   constructor(
     private readonly adminService: AdminService,
