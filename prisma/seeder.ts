@@ -50,6 +50,11 @@ async function main() {
       location: '123 Main St',
       qrCode: 'some-qr-code',
       sharedLink: 'http://example.com/restaurant',
+      admin: {
+        connect: {
+          id: superAdmin.id,
+        },
+      },
     },
   });
 
