@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
@@ -8,29 +13,51 @@ export class RestaurantService {
   constructor(private readonly prisma: PrismaService) {}
 
   getAllRestaurants() {
-    return this.prisma.restaurant.findMany();
+    return this.prisma.restaurant.findMany({
+      include: {
+        admin: true,
+      },
+    });
   }
 
   async createRestaurant(data: CreateRestaurantDto) {
     const admin = await this.prisma.admin.findUnique({
       where: {
-        email: 'admin@queueease.com',
+        email: data.email,
       },
     });
 
-    return this.prisma.restaurant.create({
+    if (!admin) {
+      throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
+    }
+
+    const existingRestaurant = await this.prisma.restaurant.findFirst({
+      where: {
+        adminId: admin.id,
+      },
+    });
+
+    if (existingRestaurant) {
+      throw new HttpException(
+        `Admin already has a restaurant`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const restaurant = await this.prisma.restaurant.create({
       data: {
         name: data.name,
         location: data.location,
         qrCode: 'qrCode',
         sharedLink: 'sharedLink',
-        admin: {
-          connect: {
-            id: admin.id,
-          },
-        },
+        adminId: admin.id,
+      },
+      include: {
+        admin: true,
       },
     });
+
+    return restaurant;
   }
 
   getRestaurantById(id: string) {

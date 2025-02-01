@@ -6,12 +6,13 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AdminJwtStrategy } from './strategies/admin.jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
+  imports: [PrismaModule],
   controllers: [AdminController],
   providers: [
     AdminService,
-    PrismaService,
     JwtService,
     ConfigService,
     AdminJwtStrategy,

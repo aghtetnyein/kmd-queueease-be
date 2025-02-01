@@ -3,10 +3,11 @@ import { RestaurantService } from './restaurants.service';
 import { RestaurantController } from './restaurants.controller';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'libs/helpers/src';
+import { PrismaModule } from 'src/prisma/prisma.module';
 
 @Module({
+  imports: [PrismaModule],
   controllers: [RestaurantController],
-  providers: [RestaurantService, PrismaService, JwtService, ConfigService],
+  providers: [RestaurantService, JwtService, ConfigService],
 })
 export class RestaurantModule {}

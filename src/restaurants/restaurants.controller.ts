@@ -23,8 +23,8 @@ export class RestaurantController {
   constructor(private readonly restaurantService: RestaurantService) {}
 
   @ApiOperation({
-    summary: 'Get restaurant',
-    description: 'Get a restaurant',
+    summary: 'Get all restaurants',
+    description: 'Get all restaurants',
   })
   @Get('')
   getAllRestaurants() {

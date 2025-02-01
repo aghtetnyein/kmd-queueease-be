@@ -27,7 +27,10 @@ export class AdminService {
   }
 
   async validateAdminAccountByEmail(email: string) {
-    const admin = await this.prisma.admin.findUnique({ where: { email } });
+    const admin = await this.prisma.admin.findUnique({
+      where: { email },
+      include: { restaurant: true },
+    });
     if (!admin) {
       throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
     }

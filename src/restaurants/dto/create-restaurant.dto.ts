@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail } from 'class-validator';
 
 export class CreateRestaurantDto {
   @IsNotEmpty()
@@ -17,4 +17,13 @@ export class CreateRestaurantDto {
     description: 'The location of the restaurant',
   })
   location: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @IsEmail()
+  @ApiProperty({
+    example: 'admin@queueease.com',
+    description: 'The email of the admin associated with the restaurant',
+  })
+  email: string;
 }
