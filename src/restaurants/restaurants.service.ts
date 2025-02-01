@@ -12,7 +12,7 @@ import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 export class RestaurantService {
   constructor(private readonly prisma: PrismaService) {}
 
-  getAllRestaurants() {
+  async getAllRestaurants() {
     return this.prisma.restaurant.findMany({
       include: {
         admin: true,

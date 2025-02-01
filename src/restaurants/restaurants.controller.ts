@@ -13,7 +13,7 @@ import { RestaurantService } from './restaurants.service';
 import { HttpExceptionFilter } from 'libs/helpers/src';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
-import { JwtAuthGuard } from 'src/admin/guards/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/admins/guards/jwt-auth.guard';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 
 @Controller('restaurant')

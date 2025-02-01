@@ -35,11 +35,23 @@ async function main() {
   });
 
   // Create a Customer
-  const customer = await prisma.customer.create({
+  const customer1 = await prisma.customer.create({
     data: {
+      phoneNo: '0621481902',
       name: 'John Doe',
       email: 'john.doe@example.com',
       password: getHashedPassword('password'),
+      isAccountCreated: true,
+    },
+  });
+
+  const customer2 = await prisma.customer.create({
+    data: {
+      phoneNo: '0621482332',
+      name: 'Berry',
+      email: null,
+      password: null,
+      isAccountCreated: false,
     },
   });
 
@@ -79,7 +91,7 @@ async function main() {
   const queue = await prisma.queue.create({
     data: {
       restaurantId: restaurant.id,
-      customerId: customer.id,
+      customerId: customer1.id,
       status: 'WAITLIST',
       progressStatus: 'PENDING',
       partySize: 2,
@@ -92,7 +104,7 @@ async function main() {
     data: {
       queueId: queue.id,
       tableId: table.id,
-      customerId: customer.id,
+      customerId: customer1.id,
       restaurantId: restaurant.id,
     },
   });
@@ -135,7 +147,7 @@ async function main() {
   const notification = await prisma.notification.create({
     data: {
       restaurantId: restaurant.id,
-      customerId: customer.id,
+      customerId: customer1.id,
       message: 'Your table is ready!',
     },
   });

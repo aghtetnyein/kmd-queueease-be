@@ -9,12 +9,13 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { AdminService } from './admin.service';
-import { LoginAdminDto } from './dto';
+import { AdminService } from './admins.service';
+import { LoginAdminDto } from './dto/login-admin.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HttpExceptionFilter } from 'libs/helpers/src/http-exception.filter';
 import { JwtService } from '@nestjs/jwt';
+import { RegisterAdminDto } from './dto/register-admin.dto';
 
 @Controller('admin')
 @UseFilters(HttpExceptionFilter)
@@ -33,6 +34,16 @@ export class AdminController {
   @Post('login')
   login(@Body() loginAdminDto: LoginAdminDto) {
     return this.adminService.login(loginAdminDto);
+  }
+
+  @ApiOperation({
+    summary: 'Admin register',
+    description: 'Admin can register',
+  })
+  @ApiBody({ type: RegisterAdminDto })
+  @Post('register')
+  register(@Body() registerAdminDto: RegisterAdminDto) {
+    return this.adminService.register(registerAdminDto);
   }
 
   @ApiOperation({
