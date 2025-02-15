@@ -48,9 +48,14 @@ export class RestaurantService {
       data: {
         name: data.name,
         location: data.location,
-        qrCode: 'qrCode',
-        sharedLink: 'sharedLink',
-        adminId: admin.id,
+        // TODO: Generate QR code and shared link
+        qrCode: '',
+        sharedLink: '',
+        admin: {
+          connect: {
+            id: admin.id,
+          },
+        },
       },
       include: {
         admin: true,

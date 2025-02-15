@@ -11,10 +11,20 @@ import {
 } from '@nestjs/common';
 import { RestaurantService } from './restaurants.service';
 import { HttpExceptionFilter } from 'libs/helpers/src';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { JwtAuthGuard } from 'src/admins/guards/jwt-auth.guard';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import {
+  CreateRestaurantResponseSchema,
+  UpdateRestaurantResponseSchema,
+} from './response-schemas';
 
 @Controller('restaurant')
 @UseFilters(HttpExceptionFilter)
@@ -38,6 +48,15 @@ export class RestaurantController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiBody({ type: CreateRestaurantDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Restaurant created successfully',
+    content: {
+      'application/json': {
+        schema: CreateRestaurantResponseSchema,
+      },
+    },
+  })
   @Post('create')
   createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto) {
     return this.restaurantService.createRestaurant(createRestaurantDto);
@@ -59,6 +78,15 @@ export class RestaurantController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiBody({ type: UpdateRestaurantDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Restaurant updated successfully',
+    content: {
+      'application/json': {
+        schema: UpdateRestaurantResponseSchema,
+      },
+    },
+  })
   @Put(':id')
   updateRestaurant(
     @Param('id') id: string,

@@ -28,9 +28,9 @@ async function main() {
   // Create a Super Admin
   const superAdmin = await prisma.admin.create({
     data: {
-      email: 'admin@queueease.com',
+      phoneNo: '0621481906',
       name: 'Super Admin',
-      password: getHashedPassword('password'),
+      password: getHashedPassword('$0meTimes1999'),
     },
   });
 

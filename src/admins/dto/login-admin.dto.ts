@@ -4,17 +4,16 @@ import { ApiProperty } from '@nestjs/swagger';
 export class LoginAdminDto {
   @IsNotEmpty()
   @IsString()
-  @IsEmail()
   @ApiProperty({
-    example: 'admin@queueease.com',
-    description: 'The email of the admin',
+    example: '0621481906',
+    description: 'The phone number of the admin',
   })
-  email: string;
+  phoneNo: string;
 
   @IsNotEmpty()
   @IsString()
   @ApiProperty({
-    example: 'password',
+    example: '$0meTimes1999',
     description: 'The password of the admin',
   })
   password: string;

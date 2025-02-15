@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AdminService } from '../admins.service';
 
 interface JwtPayload {
-  email: string;
+  phoneNo: string;
 }
 
 @Injectable()
@@ -22,8 +22,8 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'jwt-admin') {
   }
 
   async validate(payload: JwtPayload) {
-    const admin = await this.adminService.validateAdminAccountByEmail(
-      payload.email,
+    const admin = await this.adminService.validateAdminAccountByPhoneNo(
+      payload.phoneNo,
     );
     if (!admin) {
       throw new UnauthorizedException('Invalid token or user not found');

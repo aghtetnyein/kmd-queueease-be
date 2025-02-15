@@ -6,12 +6,14 @@ import { JwtService } from '@nestjs/jwt';
 import { AdminJwtStrategy } from './strategies/admins.jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { RestaurantService } from 'src/restaurants/restaurants.service';
 
 @Module({
   imports: [PrismaModule],
   controllers: [AdminController],
   providers: [
     AdminService,
+    RestaurantService,
     JwtService,
     ConfigService,
     AdminJwtStrategy,
