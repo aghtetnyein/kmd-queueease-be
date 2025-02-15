@@ -8,9 +8,6 @@ export const CreateRestaurantResponseSchema: SchemaObject =
     properties: {
       id: { type: 'string' },
       name: { type: 'string' },
-      location: { type: 'string' },
-      qrCode: { type: 'string' },
-      sharedLink: { type: 'string' },
     },
     required: ['id', 'name', 'location', 'qrCode', 'sharedLink'],
   });

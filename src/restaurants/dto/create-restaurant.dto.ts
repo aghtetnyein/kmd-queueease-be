@@ -12,14 +12,6 @@ export class CreateRestaurantDto {
 
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({
-    example: 'Restaurant Location',
-    description: 'The location of the restaurant',
-  })
-  location: string;
-
-  @IsNotEmpty()
-  @IsString()
   @IsEmail()
   @ApiProperty({
     example: 'admin@queueease.com',

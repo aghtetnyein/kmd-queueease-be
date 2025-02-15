@@ -9,8 +9,8 @@ import {
 } from './dto/register-customer.dto';
 import { getHashedPassword } from 'src/utils';
 import { LoginCustomerDto } from './dto/login-customer.dto';
-import { LoginAdminDto } from 'src/admins/dto/login-admin.dto';
 import { compareSync } from 'bcrypt';
+import { omit } from 'lodash';
 
 @Injectable()
 export class CustomersService {
@@ -37,7 +37,7 @@ export class CustomersService {
       where: { phoneNo },
     });
     if (!customer) {
-      throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     return customer;
   }
@@ -136,7 +136,7 @@ export class CustomersService {
       loginCustomerDto.phoneNo,
     );
     if (!customer) {
-      throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     if (!customer.isAccountCreated) {
       throw new HttpException('Customer not registered', HttpStatus.NOT_FOUND);
@@ -148,5 +148,13 @@ export class CustomersService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     return this.generateCustomerToken(customer.phoneNo);
+  }
+
+  async me(phoneNo: string) {
+    const customer = await this.validateCustomerAccountByPhoneNo(phoneNo);
+    if (!customer) {
+      throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
+    }
+    return omit(customer, ['id', 'password', 'createdAt', 'updatedAt']);
   }
 }

@@ -1,7 +1,22 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { HttpExceptionFilter } from 'libs/helpers/src/http-exception.filter';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UseFilters } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -10,6 +25,11 @@ import {
   RegisterNewCustomerDto,
 } from './dto/register-customer.dto';
 import { LoginCustomerDto } from './dto/login-customer.dto';
+import {
+  CustomerLoginResponseSchema,
+  GetCustomerResponseSchema,
+} from './response-schemas';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('customers')
 @UseFilters(HttpExceptionFilter)
@@ -20,6 +40,7 @@ export class CustomersController {
     private readonly jwtService: JwtService,
   ) {}
 
+  // Get all customers
   @ApiOperation({
     summary: 'Get all customers',
     description: 'Get all customers',
@@ -29,6 +50,7 @@ export class CustomersController {
     return this.customersService.getAllCustomers();
   }
 
+  // Customer create
   @ApiOperation({
     summary: 'Customer create',
     description: 'Customer can create',
@@ -39,6 +61,7 @@ export class CustomersController {
     return this.customersService.create(createCustomerDto);
   }
 
+  // New customer register
   @ApiOperation({
     summary: 'New customer register',
     description: 'New customer can register',
@@ -59,13 +82,75 @@ export class CustomersController {
     return this.customersService.registerExistingCustomer(registerCustomerDto);
   }
 
+  // Customer Login
   @ApiOperation({
     summary: 'Customer login',
     description: 'Customer can use phone number and password to login',
   })
   @ApiBody({ type: LoginCustomerDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Admin login successfully',
+    content: {
+      'application/json': {
+        schema: CustomerLoginResponseSchema,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+  })
   @Post('login')
   login(@Body() loginCustomerDto: LoginCustomerDto) {
     return this.customersService.login(loginCustomerDto);
+  }
+
+  // Get customer profile
+  @ApiOperation({
+    summary: 'Admin profile',
+    description: 'Admin can get their profile',
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Admin profile',
+    content: {
+      'application/json': {
+        schema: GetCustomerResponseSchema,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Admin not found',
+  })
+  @Get('me')
+  getProfile(@Req() req: Request) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    try {
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.JWT_CUSTOMER_SECRET,
+      });
+      return this.customersService.me(decoded.phoneNo);
+    } catch (error) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
   }
 }

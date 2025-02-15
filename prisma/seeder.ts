@@ -40,7 +40,7 @@ async function main() {
       phoneNo: '0621481902',
       name: 'John Doe',
       email: 'john.doe@example.com',
-      password: getHashedPassword('password'),
+      password: getHashedPassword('$0meTimes1999'),
       isAccountCreated: true,
     },
   });

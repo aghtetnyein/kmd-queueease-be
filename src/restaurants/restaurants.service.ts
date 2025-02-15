@@ -47,7 +47,7 @@ export class RestaurantService {
     const restaurant = await this.prisma.restaurant.create({
       data: {
         name: data.name,
-        location: data.location,
+        location: '',
         // TODO: Generate QR code and shared link
         qrCode: '',
         sharedLink: '',

@@ -74,7 +74,6 @@ export class AdminService {
     });
     const restaurant = await this.restaurantService.createRestaurant({
       name: registerAdminDto.restaurantName,
-      location: '',
       email: registerAdminDto.email,
     });
 
