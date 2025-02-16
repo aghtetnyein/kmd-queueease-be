@@ -26,10 +26,12 @@ import {
 } from './dto/register-customer.dto';
 import { LoginCustomerDto } from './dto/login-customer.dto';
 import {
+  CustomerChangePasswordResponseSchema,
   CustomerLoginResponseSchema,
-  GetCustomerResponseSchema,
+  GetCustomerProfileResponseSchema,
 } from './response-schemas';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('customers')
 @UseFilters(HttpExceptionFilter)
@@ -122,7 +124,7 @@ export class CustomersController {
     description: 'Admin profile',
     content: {
       'application/json': {
-        schema: GetCustomerResponseSchema,
+        schema: GetCustomerProfileResponseSchema,
       },
     },
   })
@@ -149,6 +151,58 @@ export class CustomersController {
         secret: process.env.JWT_CUSTOMER_SECRET,
       });
       return this.customersService.me(decoded.phoneNo);
+    } catch (error) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  // Change customer password
+  @ApiOperation({
+    summary: 'Change admin password',
+    description: 'Admin can change their password',
+  })
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    content: {
+      'application/json': {
+        schema: CustomerChangePasswordResponseSchema,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+  })
+  @Post('change-password')
+  changePassword(
+    @Req() req: Request,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    try {
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.JWT_CUSTOMER_SECRET,
+      });
+      return this.customersService.changePassword(
+        decoded.phoneNo,
+        changePasswordDto,
+      );
     } catch (error) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }

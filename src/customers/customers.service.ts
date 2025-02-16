@@ -11,6 +11,7 @@ import { getHashedPassword } from 'src/utils';
 import { LoginCustomerDto } from './dto/login-customer.dto';
 import { compareSync } from 'bcrypt';
 import { omit } from 'lodash';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class CustomersService {
@@ -156,5 +157,30 @@ export class CustomersService {
       throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
     }
     return omit(customer, ['id', 'password', 'createdAt', 'updatedAt']);
+  }
+
+  async changePassword(phoneNo: string, changePasswordDto: ChangePasswordDto) {
+    const customer = await this.validateCustomerAccountByPhoneNo(phoneNo);
+    if (!customer) {
+      throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
+    }
+    if (!compareSync(changePasswordDto.oldPassword, customer.password)) {
+      throw new HttpException('Invalid old password', HttpStatus.BAD_REQUEST);
+    }
+    if (changePasswordDto.oldPassword === changePasswordDto.newPassword) {
+      throw new HttpException(
+        'New password cannot be the same as the old password',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (changePasswordDto.newPassword !== changePasswordDto.confirmPassword) {
+      throw new HttpException('Passwords do not match', HttpStatus.BAD_REQUEST);
+    }
+    const hashedPassword = getHashedPassword(changePasswordDto.newPassword);
+    await this.prisma.customer.update({
+      where: { id: customer.id },
+      data: { password: hashedPassword },
+    });
+    return { message: 'Password changed successfully' };
   }
 }

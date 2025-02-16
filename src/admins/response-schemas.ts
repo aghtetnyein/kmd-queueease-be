@@ -24,7 +24,7 @@ export const AdminProfileResponseSchema: SchemaObject = createResponseSchema({
         qrCode: { type: 'string' },
         sharedLink: { type: 'string' },
       },
-      required: ['id', 'name', 'location', 'qrCode', 'sharedLink'],
+      required: ['name', 'location', 'qrCode', 'sharedLink'],
     },
   },
   required: ['name', 'phoneNo', 'email', 'restaurant'],
@@ -39,3 +39,8 @@ export const AdminUpdateResponseSchema: SchemaObject = createResponseSchema({
   },
   required: ['name', 'phoneNo', 'email'],
 });
+
+export const AdminChangePasswordResponseSchema: SchemaObject =
+  createResponseSchema({
+    type: 'object',
+  });

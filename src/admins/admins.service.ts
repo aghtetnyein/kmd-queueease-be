@@ -9,7 +9,7 @@ import { RegisterAdminDto } from './dto/register-admin.dto';
 import { getHashedPassword } from 'src/utils';
 import { RestaurantService } from 'src/restaurants/restaurants.service';
 import { UpdateAdminDto } from './dto/update-admin.dto';
-
+import { ChangePasswordDto } from './dto/change-password.dto';
 @Injectable()
 export class AdminService {
   constructor(
@@ -111,5 +111,30 @@ export class AdminService {
       data: updateAdminDto,
     });
     return omit(updatedAdmin, ['id', 'password', 'createdAt', 'updatedAt']);
+  }
+
+  async changePassword(phoneNo: string, changePasswordDto: ChangePasswordDto) {
+    const admin = await this.validateAdminAccountByPhoneNo(phoneNo);
+    if (!admin) {
+      throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
+    }
+    if (!compareSync(changePasswordDto.oldPassword, admin.password)) {
+      throw new HttpException('Invalid old password', HttpStatus.BAD_REQUEST);
+    }
+    if (changePasswordDto.oldPassword === changePasswordDto.newPassword) {
+      throw new HttpException(
+        'New password cannot be the same as the old password',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (changePasswordDto.newPassword !== changePasswordDto.confirmPassword) {
+      throw new HttpException('Passwords do not match', HttpStatus.BAD_REQUEST);
+    }
+    const hashedPassword = getHashedPassword(changePasswordDto.newPassword);
+    await this.prisma.admin.update({
+      where: { id: admin.id },
+      data: { password: hashedPassword },
+    });
+    return { message: 'Password changed successfully' };
   }
 }

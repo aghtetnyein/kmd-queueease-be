@@ -26,8 +26,10 @@ import { RegisterAdminDto } from './dto/register-admin.dto';
 import {
   AdminProfileResponseSchema,
   AdminLoginResponseSchema,
+  AdminChangePasswordResponseSchema,
 } from './response-schemas';
 import { UpdateAdminDto } from './dto/update-admin.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('admin')
 @UseFilters(HttpExceptionFilter)
@@ -183,6 +185,58 @@ export class AdminController {
         secret: process.env.JWT_ADMIN_SECRET,
       });
       return this.adminService.update(decoded.phoneNo, updateAdminDto);
+    } catch (error) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  // Change admin password
+  @ApiOperation({
+    summary: 'Change admin password',
+    description: 'Admin can change their password',
+  })
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+    content: {
+      'application/json': {
+        schema: AdminChangePasswordResponseSchema,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+  })
+  @Post('change-password')
+  changePassword(
+    @Req() req: Request,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    try {
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.JWT_ADMIN_SECRET,
+      });
+      return this.adminService.changePassword(
+        decoded.phoneNo,
+        changePasswordDto,
+      );
     } catch (error) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
