@@ -12,6 +12,7 @@ export const AdminLoginResponseSchema: SchemaObject = createResponseSchema({
 export const AdminProfileResponseSchema: SchemaObject = createResponseSchema({
   type: 'object',
   properties: {
+    profileImgUrl: { type: 'string', nullable: true },
     name: { type: 'string' },
     phoneNo: { type: 'string' },
     email: { type: 'string' },
@@ -27,7 +28,7 @@ export const AdminProfileResponseSchema: SchemaObject = createResponseSchema({
       required: ['name', 'location', 'qrCode', 'sharedLink'],
     },
   },
-  required: ['name', 'phoneNo', 'email', 'restaurant'],
+  required: ['profileImgUrl', 'name', 'phoneNo', 'email', 'restaurant'],
 });
 
 export const AdminUpdateResponseSchema: SchemaObject = createResponseSchema({

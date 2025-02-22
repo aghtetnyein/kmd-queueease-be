@@ -1,10 +1,4 @@
-import {
-  IsEmail,
-  IsEmpty,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateAdminDto {
@@ -32,4 +26,14 @@ export class UpdateAdminDto {
     description: 'The name of the admin',
   })
   name: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    example: 'https://example.com/profile.jpg',
+    description: 'The profile image of the admin',
+    format: 'binary',
+    nullable: true,
+  })
+  profileImg: string;
 }

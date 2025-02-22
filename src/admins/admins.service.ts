@@ -10,6 +10,8 @@ import { getHashedPassword } from 'src/utils';
 import { RestaurantService } from 'src/restaurants/restaurants.service';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UploadService } from 'src/upload/upload.service';
+import { Request } from 'express';
 @Injectable()
 export class AdminService {
   constructor(
@@ -17,6 +19,7 @@ export class AdminService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly restaurantService: RestaurantService,
+    private readonly uploadService: UploadService,
   ) {}
 
   private async generateToken(phoneNo: string) {
@@ -101,14 +104,24 @@ export class AdminService {
     return omit(admin, ['id', 'password', 'createdAt', 'updatedAt']);
   }
 
-  async update(phoneNo: string, updateAdminDto: UpdateAdminDto) {
+  async update(
+    phoneNo: string,
+    updateAdminDto: UpdateAdminDto,
+    profileImg?: Express.Multer.File,
+  ) {
     const admin = await this.validateAdminAccountByPhoneNo(phoneNo);
     if (!admin) {
       throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
     }
+    if (!profileImg) {
+      delete updateAdminDto.profileImg;
+    }
     const updatedAdmin = await this.prisma.admin.update({
       where: { id: admin.id },
-      data: updateAdminDto,
+      data: {
+        ...updateAdminDto,
+        profileImgUrl: profileImg ? profileImg.path : admin.profileImgUrl,
+      },
     });
     return omit(updatedAdmin, ['id', 'password', 'createdAt', 'updatedAt']);
   }

@@ -23,6 +23,7 @@ enum QueueStatus {
 model Admin {
   id       String  @id @default(auto()) @map("_id") @db.ObjectId
   name     String
+  profileImgUrl String?
   phoneNo  String @unique
   email    String?  @unique
   password String

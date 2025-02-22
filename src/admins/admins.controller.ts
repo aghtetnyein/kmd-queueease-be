@@ -9,6 +9,8 @@ import {
   HttpException,
   HttpStatus,
   Put,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AdminService } from './admins.service';
 import { LoginAdminDto } from './dto/login-admin.dto';
@@ -16,6 +18,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -30,6 +33,10 @@ import {
 } from './response-schemas';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { Request } from 'express';
+import { diskStorage } from 'multer';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { generateFilename } from 'src/utils';
 
 @Controller('admin')
 @UseFilters(HttpExceptionFilter)
@@ -55,14 +62,6 @@ export class AdminController {
       },
     },
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request',
-  })
   @Post('login')
   login(@Body() loginAdminDto: LoginAdminDto) {
     return this.adminService.login(loginAdminDto);
@@ -82,14 +81,6 @@ export class AdminController {
         schema: AdminProfileResponseSchema,
       },
     },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
   })
   @Post('register')
   register(@Body() registerAdminDto: RegisterAdminDto) {
@@ -111,14 +102,6 @@ export class AdminController {
         schema: AdminProfileResponseSchema,
       },
     },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Admin not found',
   })
   @Get('me')
   getProfile(@Req() req: Request) {
@@ -147,7 +130,44 @@ export class AdminController {
   })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiBody({ type: UpdateAdminDto })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FileInterceptor('profileImg', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file: Express.Multer.File, cb) => {
+          try {
+            const filename = generateFilename(
+              req as Request,
+              file as Express.Multer.File,
+            );
+            cb(null, filename);
+          } catch (error) {
+            cb(error, '');
+          }
+        },
+      }),
+    }),
+  )
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        phoneNo: { type: 'string', example: '0621481906', nullable: false },
+        email: {
+          type: 'string',
+          example: 'admin@queueease.com',
+          nullable: false,
+        },
+        name: { type: 'string', example: 'John Doe', nullable: false },
+        profileImg: {
+          type: 'string',
+          format: 'binary',
+          nullable: true,
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Admin profile',
@@ -157,20 +177,12 @@ export class AdminController {
       },
     },
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Admin not found',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request',
-  })
   @Put('update')
-  updateProfile(@Req() req: Request, @Body() updateAdminDto: UpdateAdminDto) {
+  updateProfile(
+    @Req() req: Request,
+    @Body() updateAdminDto: UpdateAdminDto,
+    @UploadedFile() profileImg: Express.Multer.File,
+  ) {
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
@@ -184,7 +196,11 @@ export class AdminController {
       const decoded = this.jwtService.verify(token, {
         secret: process.env.JWT_ADMIN_SECRET,
       });
-      return this.adminService.update(decoded.phoneNo, updateAdminDto);
+      return this.adminService.update(
+        decoded.phoneNo,
+        updateAdminDto,
+        profileImg,
+      );
     } catch (error) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
@@ -207,14 +223,6 @@ export class AdminController {
         schema: AdminChangePasswordResponseSchema,
       },
     },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request',
   })
   @Post('change-password')
   changePassword(
