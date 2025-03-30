@@ -14,6 +14,7 @@ enum QueueProgressStatus {
 }
 
 enum QueueStatus {
+  BOOKING
   WAITLIST
   SERVING
   COMPLETED
@@ -77,6 +78,7 @@ model Meal {
   id    String @id @default(auto()) @map("_id") @db.ObjectId
   name  String
   price Float
+  category String
 
   restaurantId String     @db.ObjectId
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -87,11 +89,18 @@ model Meal {
   updatedAt DateTime @updatedAt
 }
 
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+}
+
 // Table model
 model Table {
   id        String @id @default(auto()) @map("_id") @db.ObjectId
   tableNo   String
   tableSize Int
+  status    TableStatus @default(AVAILABLE)
 
   restaurantId String     @db.ObjectId
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -106,6 +115,8 @@ model Table {
 model Staff {
   id   String @id @default(auto()) @map("_id") @db.ObjectId
   name String
+  phoneNo String @unique
+  role String
 
   restaurantId String     @db.ObjectId
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -161,11 +172,8 @@ model Queue {
   status               QueueStatus
   progressStatus       QueueProgressStatus
   partySize            Int
-  waitTime             Int
-  position             Int
+  position             Int?
   timeSlot             DateTime?
-  slotSizeInMin        Int?
-  bookingholdTimeInMin Int?
 
   orders Order[]
 

@@ -6,8 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { RestaurantModule } from './restaurants/restaurants.module';
 import { CustomersModule } from './customers/customers.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { TablesModule } from './tables/tables.module';
+import { StaffsModule } from './staffs/staffs.module';
+import { MealsModule } from './meals/meals.module';
+import { BookingsModule } from './bookings/bookings.module';
 import { join } from 'path';
-
 console.log('Serving static files from:', join(process.cwd(), 'uploads'));
 
 @Module({
@@ -20,6 +23,10 @@ console.log('Serving static files from:', join(process.cwd(), 'uploads'));
     ConfigModule.forRoot(),
     RestaurantModule,
     CustomersModule,
+    TablesModule,
+    StaffsModule,
+    MealsModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

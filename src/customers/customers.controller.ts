@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -30,7 +31,9 @@ import {
   CustomerLoginResponseSchema,
   GetCustomerProfileResponseSchema,
 } from './response-schemas';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtAuthGuard as CustomerJwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtAuthGuard as AdminJwtAuthGuard } from 'src/admins/guards/jwt-auth.guard';
+
 import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('customers')
@@ -43,13 +46,17 @@ export class CustomersController {
   ) {}
 
   // Get all customers
+  @ApiBearerAuth()
+  @UseGuards(AdminJwtAuthGuard)
   @ApiOperation({
     summary: 'Get all customers',
     description: 'Get all customers',
   })
   @Get('')
-  getAllCustomers() {
-    return this.customersService.getAllCustomers();
+  getAllCustomers(
+    @Query() query: { page?: string; page_size?: string; search?: string },
+  ) {
+    return this.customersService.getAllCustomers(query);
   }
 
   // Customer create
@@ -114,14 +121,14 @@ export class CustomersController {
 
   // Get customer profile
   @ApiOperation({
-    summary: 'Admin profile',
-    description: 'Admin can get their profile',
+    summary: 'Customer profile',
+    description: 'Customer can get their profile',
   })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CustomerJwtAuthGuard)
   @ApiBearerAuth()
   @ApiResponse({
     status: 200,
-    description: 'Admin profile',
+    description: 'Customer profile',
     content: {
       'application/json': {
         schema: GetCustomerProfileResponseSchema,
@@ -158,11 +165,11 @@ export class CustomersController {
 
   // Change customer password
   @ApiOperation({
-    summary: 'Change admin password',
-    description: 'Admin can change their password',
+    summary: 'Change customer password',
+    description: 'Customer can change their password',
   })
   @Post('change-password')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(CustomerJwtAuthGuard)
   @ApiBearerAuth()
   @ApiBody({ type: ChangePasswordDto })
   @ApiResponse({

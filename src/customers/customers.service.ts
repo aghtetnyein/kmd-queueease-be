@@ -12,6 +12,7 @@ import { LoginCustomerDto } from './dto/login-customer.dto';
 import { compareSync } from 'bcrypt';
 import { omit } from 'lodash';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { Customer } from '@prisma/client';
 
 @Injectable()
 export class CustomersService {
@@ -43,8 +44,67 @@ export class CustomersService {
     return customer;
   }
 
-  async getAllCustomers() {
-    return this.prisma.customer.findMany();
+  async getAllCustomers({
+    page = '1',
+    page_size = '20',
+    search,
+  }: {
+    page?: string;
+    page_size?: string;
+    search?: string;
+  }) {
+    const skip = (Number(page) - 1) * Number(page_size);
+
+    let customers: Customer[];
+    let total: number;
+
+    if (search) {
+      [customers, total] = await Promise.all([
+        this.prisma.customer.findMany({
+          where: {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+              { phoneNo: { contains: search } },
+            ],
+          },
+          skip,
+          take: Number(page_size),
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.customer.count({
+          where: {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+              { phoneNo: { contains: search } },
+            ],
+          },
+        }),
+      ]);
+    } else {
+      [customers, total] = await Promise.all([
+        this.prisma.customer.findMany({
+          skip,
+          take: Number(page_size),
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.customer.count(),
+      ]);
+    }
+
+    return {
+      data: customers,
+      page_data: {
+        total: Number(total),
+        page: Number(page),
+        page_size: Number(page_size),
+        total_pages: Math.ceil(Number(total) / Number(page_size)),
+        has_previous_page: Number(page) > 1,
+        has_next_page:
+          Number(page) < Math.ceil(Number(total) / Number(page_size)),
+      },
+    };
   }
 
   async create(createCustomerDto: CreateCustomerDto) {
