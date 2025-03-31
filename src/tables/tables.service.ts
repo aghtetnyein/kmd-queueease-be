@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
 import { Table, TableStatus } from '@prisma/client';
+import { CreateTableDto } from './dto/create-table.dto';
+import { UpdateTableDto } from './dto/update-table.dto';
 
 @Injectable()
 export class TablesService {
@@ -73,5 +75,31 @@ export class TablesService {
           Number(page) < Math.ceil(Number(total) / Number(page_size)),
       },
     };
+  }
+
+  async addTable(data: CreateTableDto) {
+    return this.prisma.table.create({
+      data: {
+        ...data,
+        status: data.status as TableStatus,
+        restaurantId: data.restaurantId,
+      },
+    });
+  }
+
+  async updateTable(id: string, data: UpdateTableDto) {
+    return this.prisma.table.update({
+      where: { id },
+      data: {
+        ...data,
+        status: data.status as TableStatus,
+      },
+    });
+  }
+
+  async deleteTable(id: string) {
+    return this.prisma.table.delete({
+      where: { id },
+    });
   }
 }
