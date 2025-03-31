@@ -22,13 +22,13 @@ enum QueueStatus {
 
 // Admin model
 model Admin {
-  id       String  @id @default(auto()) @map("_id") @db.ObjectId
-  name     String
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
   profileImgUrl String?
-  phoneNo  String @unique
-  email    String?  @unique
-  password String
-  restaurant Restaurant?
+  phoneNo       String      @unique
+  email         String?     @unique
+  password      String
+  restaurant    Restaurant?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,7 +39,7 @@ model Customer {
   id               String  @id @default(auto()) @map("_id") @db.ObjectId
   phoneNo          String  @unique
   name             String
-  email            String?  @unique
+  email            String? @unique
   password         String?
   isAccountCreated Boolean @default(false)
 
@@ -53,11 +53,15 @@ model Customer {
 
 // Restaurant model
 model Restaurant {
-  id         String @id @default(auto()) @map("_id") @db.ObjectId
-  name       String
-  location   String
-  qrCode     String
-  sharedLink String
+  id                String @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  location          String
+  qrCode            String
+  sharedLink        String
+  openDays          Int[]
+  openHour          String
+  closeHour         String
+  slotDurationInMin Int
 
   admin   Admin  @relation(fields: [adminId], references: [id])
   adminId String @unique @db.ObjectId
@@ -75,9 +79,9 @@ model Restaurant {
 
 // Meal model
 model Meal {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  name  String
-  price Float
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  price    Float
   category String
 
   restaurantId String     @db.ObjectId
@@ -97,7 +101,7 @@ enum TableStatus {
 
 // Table model
 model Table {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
   tableNo   String
   tableSize Int
   status    TableStatus @default(AVAILABLE)
@@ -113,10 +117,10 @@ model Table {
 
 // Staff model
 model Staff {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name String
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
   phoneNo String @unique
-  role String
+  role    String
 
   restaurantId String     @db.ObjectId
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -169,11 +173,11 @@ model Queue {
   customerId   String     @db.ObjectId
   customer     Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  status               QueueStatus
-  progressStatus       QueueProgressStatus
-  partySize            Int
-  position             Int?
-  timeSlot             DateTime?
+  status         QueueStatus
+  progressStatus QueueProgressStatus
+  partySize      Int
+  position       Int?
+  timeSlot       DateTime?
 
   orders Order[]
 

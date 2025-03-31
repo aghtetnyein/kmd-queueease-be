@@ -7,6 +7,8 @@ import {
 import { PrismaService } from 'libs/helpers/src';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
+import { UpdateRestaurantOpenDaysDto } from './dto/update-restaurant-days.dto';
+import { UpdateRestaurantOpenHoursDto } from './dto/update-restaurant-hours.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -47,10 +49,14 @@ export class RestaurantService {
     const restaurant = await this.prisma.restaurant.create({
       data: {
         name: data.name,
-        location: '',
         // TODO: Generate QR code and shared link
+        location: '',
         qrCode: '',
         sharedLink: '',
+        openDays: [1, 2, 3, 4, 5],
+        openHour: '10:00',
+        closeHour: '22:00',
+        slotDurationInMin: 30,
         admin: {
           connect: {
             id: admin.id,
@@ -81,6 +87,24 @@ export class RestaurantService {
   deleteRestaurant(id: string) {
     return this.prisma.restaurant.delete({
       where: { id },
+    });
+  }
+
+  updateRestaurantOpenDays(id: string, data: UpdateRestaurantOpenDaysDto) {
+    return this.prisma.restaurant.update({
+      where: { id },
+      data: { openDays: data.openDays.map(Number) },
+    });
+  }
+
+  updateRestaurantOpenHours(id: string, data: UpdateRestaurantOpenHoursDto) {
+    return this.prisma.restaurant.update({
+      where: { id },
+      data: {
+        openHour: data.openHour,
+        closeHour: data.closeHour,
+        slotDurationInMin: data.slotDurationInMin,
+      },
     });
   }
 }

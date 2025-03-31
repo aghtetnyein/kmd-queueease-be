@@ -25,6 +25,8 @@ import {
   CreateRestaurantResponseSchema,
   UpdateRestaurantResponseSchema,
 } from './response-schemas';
+import { UpdateRestaurantOpenDaysDto } from './dto/update-restaurant-days.dto';
+import { UpdateRestaurantOpenHoursDto } from './dto/update-restaurant-hours.dto';
 
 @Controller('restaurant')
 @UseFilters(HttpExceptionFilter)
@@ -104,5 +106,41 @@ export class RestaurantController {
   @Delete(':id')
   deleteRestaurant(@Param('id') id: string) {
     return this.restaurantService.deleteRestaurant(id);
+  }
+
+  @ApiOperation({
+    summary: 'Update restaurant open days',
+    description: 'Update the open days of a restaurant',
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateRestaurantOpenDaysDto })
+  @Put(':id/open-days')
+  updateRestaurantOpenDays(
+    @Param('id') id: string,
+    @Body() updateRestaurantOpenDaysDto: UpdateRestaurantOpenDaysDto,
+  ) {
+    return this.restaurantService.updateRestaurantOpenDays(
+      id,
+      updateRestaurantOpenDaysDto,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Update restaurant open hours',
+    description: 'Update the open hours of a restaurant',
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateRestaurantOpenHoursDto })
+  @Put(':id/open-hours')
+  updateRestaurantOpenHours(
+    @Param('id') id: string,
+    @Body() updateRestaurantOpenHoursDto: UpdateRestaurantOpenHoursDto,
+  ) {
+    return this.restaurantService.updateRestaurantOpenHours(
+      id,
+      updateRestaurantOpenHoursDto,
+    );
   }
 }
