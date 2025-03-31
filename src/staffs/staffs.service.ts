@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
 import { Staff } from '@prisma/client';
+import { CreateStaffDto } from './dto/create-staff.dto';
+import { UpdateStaffDto } from './dto/update-staff.dto';
 
 @Injectable()
 export class StaffsService {
@@ -66,5 +68,27 @@ export class StaffsService {
           Number(page) < Math.ceil(Number(total) / Number(page_size)),
       },
     };
+  }
+
+  async createStaff(data: CreateStaffDto) {
+    return this.prisma.staff.create({
+      data: {
+        ...data,
+        restaurantId: data.restaurantId,
+      },
+    });
+  }
+
+  async updateStaff(id: string, data: UpdateStaffDto) {
+    return this.prisma.staff.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteStaff(id: string) {
+    return this.prisma.staff.delete({
+      where: { id },
+    });
   }
 }
