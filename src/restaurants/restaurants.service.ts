@@ -14,7 +14,34 @@ import { UpdateRestaurantOpenHoursDto } from './dto/update-restaurant-hours.dto'
 export class RestaurantService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllRestaurants() {
+  async getAllRestaurants({ search }: { search?: string }) {
+    if (search) {
+      return this.prisma.restaurant.findMany({
+        where: {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { location: { contains: search, mode: 'insensitive' } },
+            { slug: { contains: search, mode: 'insensitive' } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          location: true,
+          slug: true,
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              phoneNo: true,
+              email: true,
+              profileImgUrl: true,
+            },
+          },
+        },
+      });
+    }
+
     return this.prisma.restaurant.findMany({
       include: {
         admin: true,
@@ -49,6 +76,7 @@ export class RestaurantService {
     const restaurant = await this.prisma.restaurant.create({
       data: {
         name: data.name,
+        slug: data.name.toLowerCase().replace(/ /g, '-'),
         // TODO: Generate QR code and shared link
         location: '',
         qrCode: '',
@@ -74,6 +102,15 @@ export class RestaurantService {
   getRestaurantById(id: string) {
     return this.prisma.restaurant.findUnique({
       where: { id },
+    });
+  }
+
+  getRestaurantDetailsBySlug(slug: string) {
+    return this.prisma.restaurant.findUnique({
+      where: { slug },
+      include: {
+        admin: true,
+      },
     });
   }
 

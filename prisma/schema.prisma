@@ -55,6 +55,7 @@ model Customer {
 model Restaurant {
   id                String @id @default(auto()) @map("_id") @db.ObjectId
   name              String
+  slug              String @unique
   location          String
   qrCode            String
   sharedLink        String

@@ -100,19 +100,73 @@ async function createCustomers() {
 
 // Create restaurant
 async function createRestaurant(adminId: string) {
-  return await prisma.restaurant.create({
-    data: {
+  const restaurantsData = [
+    {
       name: 'The Great Restaurant',
+      slug: 'the-great-restaurant',
       location: '123 Main St',
-      qrCode: 'some-qr-code',
-      sharedLink: 'http://example.com/restaurant',
+      qrCode: 'some-qr-code-1',
+      sharedLink: 'http://example.com/restaurant-1',
       openDays: [1, 2, 3, 4, 5],
       openHour: '10:00',
       closeHour: '22:00',
       slotDurationInMin: 30,
-      admin: { connect: { id: adminId } },
     },
-  });
+    {
+      name: 'Sushi Paradise',
+      slug: 'sushi-paradise',
+      location: '456 Ocean Ave',
+      qrCode: 'some-qr-code-2',
+      sharedLink: 'http://example.com/restaurant-2',
+      openDays: [1, 2, 3, 4, 5, 6],
+      openHour: '11:00',
+      closeHour: '23:00',
+      slotDurationInMin: 45,
+    },
+    {
+      name: 'Italian Villa',
+      slug: 'italian-villa',
+      location: '789 Pasta Lane',
+      qrCode: 'some-qr-code-3',
+      sharedLink: 'http://example.com/restaurant-3',
+      openDays: [2, 3, 4, 5, 6, 7],
+      openHour: '12:00',
+      closeHour: '21:00',
+      slotDurationInMin: 30,
+    },
+    {
+      name: 'Spice Garden',
+      slug: 'spice-garden',
+      location: '321 Curry Road',
+      qrCode: 'some-qr-code-4',
+      sharedLink: 'http://example.com/restaurant-4',
+      openDays: [1, 2, 3, 4, 5, 6, 7],
+      openHour: '11:30',
+      closeHour: '22:30',
+      slotDurationInMin: 40,
+    },
+    {
+      name: 'BBQ House',
+      slug: 'bbq-house',
+      location: '567 Smoke Street',
+      qrCode: 'some-qr-code-5',
+      sharedLink: 'http://example.com/restaurant-5',
+      openDays: [3, 4, 5, 6, 7],
+      openHour: '16:00',
+      closeHour: '23:00',
+      slotDurationInMin: 60,
+    },
+  ];
+
+  const restaurants = [];
+  for (const data of restaurantsData) {
+    restaurants.push(
+      await prisma.restaurant.create({
+        data: { ...data, adminId },
+      }),
+    );
+  }
+  return restaurants;
 }
 
 // Create tables
@@ -300,22 +354,22 @@ async function main() {
 
   const admin = await createAdmin();
   const customers = await createCustomers();
-  const restaurant = await createRestaurant(admin.id);
-  const tables = await createTables(restaurant.id);
-  const staff = await createStaff(restaurant.id);
-  const queues = await createQueues(restaurant.id, customers);
-  const meals = await createMeals(restaurant.id);
+  const restaurants = await createRestaurant(admin.id);
+  const tables = await createTables(restaurants[0].id);
+  const staff = await createStaff(restaurants[0].id);
+  const queues = await createQueues(restaurants[0].id, customers);
+  const meals = await createMeals(restaurants[0].id);
 
   // Create an order with the first queue, table, and customer
   const order = await createOrders(
     queues[0].id,
     tables[0].id,
     customers[0].id,
-    restaurant.id,
+    restaurants[0].id,
     meals,
   );
 
-  await createNotifications(restaurant.id, customers[0].id);
+  await createNotifications(restaurants[0].id, customers[0].id);
 
   console.log('Seeding completed.');
 }

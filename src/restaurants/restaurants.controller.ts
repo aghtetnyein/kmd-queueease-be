@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
@@ -39,8 +40,8 @@ export class RestaurantController {
     description: 'Get all restaurants',
   })
   @Get('')
-  getAllRestaurants() {
-    return this.restaurantService.getAllRestaurants();
+  getAllRestaurants(@Query('search') search?: string) {
+    return this.restaurantService.getAllRestaurants({ search });
   }
 
   @ApiOperation({
@@ -71,6 +72,15 @@ export class RestaurantController {
   @Get(':id')
   getRestaurantById(@Param('id') id: string) {
     return this.restaurantService.getRestaurantById(id);
+  }
+
+  @ApiOperation({
+    summary: 'Get restaurant by slug',
+    description: 'Get a restaurant by slug',
+  })
+  @Get('/details/:slug')
+  getRestaurantDetailsBySlug(@Param('slug') slug: string) {
+    return this.restaurantService.getRestaurantDetailsBySlug(slug);
   }
 
   @ApiOperation({
