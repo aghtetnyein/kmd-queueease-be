@@ -248,7 +248,7 @@ async function createQueues(restaurantId: string, customers: any[]) {
       partySize: 4,
       timeSlot: new Date(
         new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
-          10,
+          12,
           0,
           0,
           0,

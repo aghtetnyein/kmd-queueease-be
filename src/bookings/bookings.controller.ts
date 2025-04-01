@@ -22,23 +22,28 @@ export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   // Get all bookings
-  @ApiBearerAuth()
-  @UseGuards(AdminJwtAuthGuard)
   @ApiOperation({
-    summary: 'Get all bookings by day',
-    description: 'Get all bookings by day',
+    summary: 'Get all bookings by restaurant id and day',
+    description: 'Get all bookings by restaurant id and day',
   })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
         day: { type: 'string' },
+        restaurantId: { type: 'string' },
       },
     },
   })
-  @Get('/:day')
-  getAllBookingsByDay(@Param('day') day: string) {
-    return this.bookingsService.getAllBookingsByDay(day);
+  @Get('')
+  getAllBookingsByRestaurantIdAndDay(
+    @Query('day') day: string,
+    @Query('restaurantId') restaurantId: string,
+  ) {
+    return this.bookingsService.getAllBookingsByRestaurantIdAndDay(
+      day,
+      restaurantId,
+    );
   }
 
   // Create a booking

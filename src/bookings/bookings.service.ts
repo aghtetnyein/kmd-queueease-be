@@ -7,7 +7,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 export class BookingsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllBookingsByDay(day: string) {
+  async getAllBookingsByRestaurantIdAndDay(day: string, restaurantId: string) {
     const bookings = await this.prisma.queue.findMany({
       where: {
         timeSlot: {
@@ -15,6 +15,7 @@ export class BookingsService {
           lte: new Date(`${day}T23:59:59.999Z`),
         },
         status: 'BOOKING',
+        restaurantId,
       },
       include: {
         customer: true,
