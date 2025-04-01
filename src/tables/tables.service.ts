@@ -102,4 +102,13 @@ export class TablesService {
       where: { id },
     });
   }
+
+  async getTableofLargestPartySize(restaurantId: string) {
+    const table = await this.prisma.table.findFirst({
+      where: { restaurantId },
+      orderBy: { tableSize: 'desc' },
+    });
+
+    return table ? table : {};
+  }
 }

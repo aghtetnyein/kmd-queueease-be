@@ -72,4 +72,14 @@ export class TablesController {
   deleteTable(@Param('id') id: string) {
     return this.tablesService.deleteTable(id);
   }
+
+  // Get table of largest party size
+  @ApiOperation({
+    summary: 'Get table of largest party size',
+    description: 'Get table of largest party size',
+  })
+  @Get('largest-party-size/:restaurantId')
+  getTableofLargestPartySize(@Param('restaurantId') restaurantId: string) {
+    return this.tablesService.getTableofLargestPartySize(restaurantId);
+  }
 }

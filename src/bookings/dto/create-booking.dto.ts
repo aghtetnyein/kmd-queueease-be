@@ -19,12 +19,19 @@ export class CreateBookingDto {
 
   @IsNotEmpty()
   @IsString()
-  @IsMongoId()
   @ApiProperty({
     example: '1234567890',
-    description: 'The ID of the customer',
+    description: 'The phone number of the customer',
   })
-  customerId: string;
+  phoneNo: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    example: '1234567890',
+    description: 'The name of the customer',
+  })
+  name: string;
 
   @IsNotEmpty()
   @IsNumber()
@@ -35,10 +42,18 @@ export class CreateBookingDto {
   partySize: number;
 
   @IsNotEmpty()
-  @IsDate()
+  @IsString()
   @ApiProperty({
     example: '2025-03-31T10:00:00.000Z',
-    description: 'The time slot of the booking',
+    description: 'The selected date of the booking',
   })
-  timeSlot: Date;
+  selectedDate: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    example: '2025-03-31T10:00:00.000Z',
+    description: 'The selected time slot of the booking',
+  })
+  selectedSlot: string;
 }
