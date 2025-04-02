@@ -105,13 +105,33 @@ export class RestaurantService {
     });
   }
 
-  getRestaurantDetailsBySlug(slug: string) {
-    return this.prisma.restaurant.findUnique({
+  async getRestaurantDetailsBySlug(slug: string) {
+    const restaurant = await this.prisma.restaurant.findUnique({
       where: { slug },
       include: {
         admin: true,
       },
     });
+
+    if (!restaurant) {
+      throw new HttpException('Restaurant not found', HttpStatus.NOT_FOUND);
+    }
+
+    const tables = await this.prisma.table.findMany({
+      where: { restaurantId: restaurant.id },
+    });
+
+    if (tables.length === 0) {
+      return {
+        ...restaurant,
+        setupProgress: 'INCOMPLETE',
+      };
+    }
+
+    return {
+      ...restaurant,
+      setupProgress: 'COMPLETE',
+    };
   }
 
   updateRestaurant(id: string, data: UpdateRestaurantDto) {

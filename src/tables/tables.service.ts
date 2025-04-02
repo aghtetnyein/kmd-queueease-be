@@ -1,16 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
 import { Table, TableStatus } from '@prisma/client';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
-
+import { BookingsService } from 'src/bookings/bookings.service';
+import { parse } from 'date-fns';
 @Injectable()
 export class TablesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => BookingsService))
+    private readonly bookingsService: BookingsService,
+  ) {}
   async getAllTables({
     page = '1',
     page_size = '20',
-    status,
     search,
   }: {
     page?: string;
@@ -19,10 +23,6 @@ export class TablesService {
     search?: string;
   }) {
     const skip = (Number(page) - 1) * Number(page_size);
-    const statusFilter =
-      status && status.toLowerCase() !== 'all'
-        ? { status: { equals: status as TableStatus } }
-        : {};
 
     let tables: Table[];
     let total: number;
@@ -31,10 +31,7 @@ export class TablesService {
       [tables, total] = await Promise.all([
         this.prisma.table.findMany({
           where: {
-            AND: [
-              { tableNo: { contains: search, mode: 'insensitive' } },
-              { ...statusFilter },
-            ],
+            AND: [{ tableNo: { contains: search, mode: 'insensitive' } }],
           },
           skip,
           take: Number(page_size),
@@ -42,24 +39,18 @@ export class TablesService {
         }),
         this.prisma.table.count({
           where: {
-            AND: [
-              { tableNo: { contains: search, mode: 'insensitive' } },
-              { ...statusFilter },
-            ],
+            AND: [{ tableNo: { contains: search, mode: 'insensitive' } }],
           },
         }),
       ]);
     } else {
       [tables, total] = await Promise.all([
         this.prisma.table.findMany({
-          where: statusFilter,
           skip,
           take: Number(page_size),
           orderBy: { createdAt: 'desc' },
         }),
-        this.prisma.table.count({
-          where: statusFilter,
-        }),
+        this.prisma.table.count({}),
       ]);
     }
 
@@ -77,23 +68,43 @@ export class TablesService {
     };
   }
 
+  async getAllTablesForTimeSlot(
+    restaurantId: string,
+    timeSlot: string,
+    status?: TableStatus,
+  ) {
+    const queueTables = await this.prisma.tableQueue.findMany({
+      where: {
+        table: {
+          restaurantId,
+        },
+        ...(status && { status }),
+        // queue: {
+        //   timeSlot: {
+        //     equals: new Date(timeSlot),
+        //   },
+        // },
+      },
+      orderBy: {
+        table: {
+          tableSize: 'asc',
+        },
+      },
+    });
+    console.log(queueTables);
+    return queueTables;
+  }
+
   async addTable(data: CreateTableDto) {
     return this.prisma.table.create({
-      data: {
-        ...data,
-        status: data.status as TableStatus,
-        restaurantId: data.restaurantId,
-      },
+      data: data,
     });
   }
 
   async updateTable(id: string, data: UpdateTableDto) {
     return this.prisma.table.update({
       where: { id },
-      data: {
-        ...data,
-        status: data.status as TableStatus,
-      },
+      data: data,
     });
   }
 
@@ -103,12 +114,59 @@ export class TablesService {
     });
   }
 
-  async getTableofLargestPartySize(restaurantId: string) {
+  async getNearestPartySizeAvailableTable(
+    restaurantId: string,
+    timeSlot: string,
+    partySize: number,
+  ) {
+    const allTables = await this.prisma.table.findMany({
+      where: { restaurantId },
+    });
+
+    const table = allTables.find((table) => table.tableSize >= partySize);
+
+    const bookings =
+      await this.bookingsService.getAllBookingsByRestaurantIdAndDay(
+        timeSlot,
+        restaurantId,
+        'equals',
+      );
+
+    if (!bookings[`${timeSlot}`]) {
+      return table;
+    }
+
+    const nearestTable = bookings[`${timeSlot}`].availableTables.find(
+      (table) => table.tableSize >= partySize,
+    );
+
+    return nearestTable;
+  }
+
+  async getTableofLargestPartySizeAvailable(
+    restaurantId: string,
+    timeSlot: string,
+  ) {
     const table = await this.prisma.table.findFirst({
       where: { restaurantId },
       orderBy: { tableSize: 'desc' },
     });
 
-    return table ? table : {};
+    const bookings =
+      await this.bookingsService.getAllBookingsByRestaurantIdAndDay(
+        timeSlot,
+        restaurantId,
+        'equals',
+      );
+
+    if (!bookings[`${timeSlot}`]) {
+      return { availableTableSize: table.tableSize };
+    }
+
+    const largestAvailableTable = bookings[`${timeSlot}`].availableTables.sort(
+      (a, b) => b.tableSize - a.tableSize,
+    )[0];
+
+    return { availableTableSize: largestAvailableTable.tableSize };
   }
 }

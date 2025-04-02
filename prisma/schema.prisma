@@ -102,15 +102,30 @@ enum TableStatus {
 
 // Table model
 model Table {
-  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
   tableNo   String
   tableSize Int
-  status    TableStatus @default(AVAILABLE)
 
   restaurantId String     @db.ObjectId
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
-  orders Order[]
+  orders      Order[]
+  tableQueues TableQueue[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Table Queue model
+model TableQueue {
+  id     String      @id @default(auto()) @map("_id") @db.ObjectId
+  status TableStatus @default(AVAILABLE)
+
+  tableId String @db.ObjectId
+  table   Table  @relation(fields: [tableId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  queueId String @db.ObjectId
+  queue   Queue  @relation(fields: [queueId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -180,7 +195,8 @@ model Queue {
   position       Int?
   timeSlot       DateTime?
 
-  orders Order[]
+  orders      Order[]
+  tableQueues TableQueue[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

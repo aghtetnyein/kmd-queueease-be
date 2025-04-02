@@ -25,12 +25,4 @@ export class CreateTableDto {
     description: 'The size of the table',
   })
   tableSize: number;
-
-  @IsNotEmpty()
-  @IsString()
-  @ApiProperty({
-    example: 'AVAILABLE',
-    description: 'The status of the table',
-  })
-  status: string;
 }

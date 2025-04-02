@@ -43,6 +43,7 @@ export class BookingsController {
     return this.bookingsService.getAllBookingsByRestaurantIdAndDay(
       day,
       restaurantId,
+      'between',
     );
   }
 
@@ -54,5 +55,15 @@ export class BookingsController {
   @Post('')
   createBooking(@Body() body: CreateBookingDto) {
     return this.bookingsService.createBooking(body);
+  }
+
+  // Get a booking by id
+  @ApiOperation({
+    summary: 'Get a booking by id',
+    description: 'Get a booking by id',
+  })
+  @Get(':id')
+  getBookingById(@Param('id') id: string) {
+    return this.bookingsService.getBookingById(id);
   }
 }

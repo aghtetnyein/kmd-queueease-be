@@ -1,10 +1,4 @@
-import {
-  IsDate,
-  IsMongoId,
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-} from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateBookingDto {
@@ -40,14 +34,6 @@ export class CreateBookingDto {
     description: 'The size of the party',
   })
   partySize: number;
-
-  @IsNotEmpty()
-  @IsString()
-  @ApiProperty({
-    example: '2025-03-31T10:00:00.000Z',
-    description: 'The selected date of the booking',
-  })
-  selectedDate: string;
 
   @IsNotEmpty()
   @IsString()

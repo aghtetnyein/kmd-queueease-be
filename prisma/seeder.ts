@@ -108,8 +108,8 @@ async function createRestaurant(adminId: string) {
       qrCode: 'some-qr-code-1',
       sharedLink: 'http://example.com/restaurant-1',
       openDays: [1, 2, 3, 4, 5],
-      openHour: '10:00',
-      closeHour: '22:00',
+      openHour: '10:30',
+      closeHour: '22:30',
       slotDurationInMin: 30,
     },
     {
@@ -172,12 +172,12 @@ async function createRestaurant(adminId: string) {
 // Create tables
 async function createTables(restaurantId: string) {
   const tablesData = [
-    { tableNo: 'A1', tableSize: 4, status: 'AVAILABLE' as const },
-    { tableNo: 'A2', tableSize: 2, status: 'OCCUPIED' as const },
-    { tableNo: 'B1', tableSize: 6, status: 'RESERVED' as const },
-    { tableNo: 'B2', tableSize: 8, status: 'AVAILABLE' as const },
-    { tableNo: 'B3', tableSize: 4, status: 'AVAILABLE' as const },
-    { tableNo: 'B4', tableSize: 6, status: 'OCCUPIED' as const },
+    { tableNo: 'A1', tableSize: 4 },
+    { tableNo: 'A2', tableSize: 2 },
+    { tableNo: 'B1', tableSize: 6 },
+    { tableNo: 'B2', tableSize: 10 },
+    { tableNo: 'B3', tableSize: 8 },
+    { tableNo: 'B4', tableSize: 6 },
   ];
 
   const tables = [];
@@ -214,7 +214,11 @@ async function createStaff(restaurantId: string) {
 }
 
 // Create queues
-async function createQueues(restaurantId: string, customers: any[]) {
+async function createQueues(
+  restaurantId: string,
+  customers: any[],
+  tables: any[],
+) {
   const queuesData = [
     {
       restaurantId,
@@ -223,6 +227,7 @@ async function createQueues(restaurantId: string, customers: any[]) {
       progressStatus: 'PENDING' as const,
       partySize: 2,
       position: 1,
+      tableId: tables[0].id,
       timeSlot: new Date(
         new Date(new Date().setDate(new Date().getDate() - 1)).setHours(
           10,
@@ -237,15 +242,69 @@ async function createQueues(restaurantId: string, customers: any[]) {
       customerId: customers[1].id,
       status: 'BOOKING' as const,
       progressStatus: 'PENDING' as const,
-      partySize: 2,
-      timeSlot: new Date(new Date().setHours(11, 0, 0, 0)),
+      partySize: 3,
+      tableId: tables[0].id,
+      timeSlot: new Date(new Date().setHours(19, 0, 0, 0)),
     },
     {
+      restaurantId,
+      customerId: customers[1].id,
+      status: 'BOOKING' as const,
+      progressStatus: 'PENDING' as const,
+      partySize: 2,
+      tableId: tables[1].id,
+      timeSlot: new Date(new Date().setHours(19, 0, 0, 0)),
+    },
+    {
+      restaurantId,
+      customerId: customers[3].id,
+      status: 'BOOKING' as const,
+      progressStatus: 'PENDING' as const,
+      partySize: 2,
+      tableId: tables[0].id,
+      timeSlot: new Date(new Date().setHours(20, 0, 0, 0)),
+    },
+    {
+      restaurantId,
+      customerId: customers[4].id,
+      status: 'BOOKING' as const,
+      progressStatus: 'PENDING' as const,
+      partySize: 2,
+      tableId: tables[0].id,
+      timeSlot: new Date(new Date().setHours(21, 0, 0, 0)),
+    },
+    {
+      restaurantId,
+      customerId: customers[5].id,
+      status: 'BOOKING' as const,
+      progressStatus: 'PENDING' as const,
+      partySize: 2,
+      tableId: tables[1].id,
+      timeSlot: new Date(new Date().setHours(21, 0, 0, 0)),
+    },
+    ...new Array(4).fill(null).map((_, index) => ({
       restaurantId,
       customerId: customers[2].id,
       status: 'BOOKING' as const,
       progressStatus: 'PENDING' as const,
       partySize: 4,
+      tableId: tables[index].id,
+      timeSlot: new Date(
+        new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
+          11,
+          0,
+          0,
+          0,
+        ),
+      ),
+    })),
+    ...new Array(5).fill(null).map((_, index) => ({
+      restaurantId,
+      customerId: customers[2].id,
+      status: 'BOOKING' as const,
+      progressStatus: 'PENDING' as const,
+      partySize: 4,
+      tableId: tables[index].id,
       timeSlot: new Date(
         new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
           12,
@@ -254,40 +313,39 @@ async function createQueues(restaurantId: string, customers: any[]) {
           0,
         ),
       ),
-    },
-    {
+    })),
+    ...new Array(6).fill(null).map((_, index) => ({
       restaurantId,
-      customerId: customers[3].id,
+      customerId: customers[2].id,
       status: 'BOOKING' as const,
       progressStatus: 'PENDING' as const,
-      partySize: 2,
-      timeSlot: new Date(new Date().setHours(13, 0, 0, 0)),
-    },
-    {
-      restaurantId,
-      customerId: customers[4].id,
-      status: 'BOOKING' as const,
-      progressStatus: 'PENDING' as const,
-      partySize: 2,
-      timeSlot: new Date(new Date().setHours(11, 0, 0, 0)),
-    },
-    {
-      restaurantId,
-      customerId: customers[5].id,
-      status: 'BOOKING' as const,
-      progressStatus: 'PENDING' as const,
-      partySize: 2,
-      timeSlot: new Date(new Date().setHours(11, 0, 0, 0)),
-    },
+      partySize: 4,
+      tableId: tables[index].id,
+      timeSlot: new Date(
+        new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
+          13,
+          0,
+          0,
+          0,
+        ),
+      ),
+    })),
   ];
 
   const queues = [];
   for (const data of queuesData) {
-    queues.push(
-      await prisma.queue.create({
-        data: { ...data, restaurantId },
-      }),
-    );
+    const { tableId, ...queueData } = data;
+    const newQueue = await prisma.queue.create({
+      data: { ...queueData, restaurantId },
+    });
+    queues.push(newQueue);
+    await prisma.tableQueue.create({
+      data: {
+        tableId,
+        queueId: newQueue.id,
+        status: 'OCCUPIED',
+      },
+    });
   }
   return queues;
 }
@@ -357,7 +415,7 @@ async function main() {
   const restaurants = await createRestaurant(admin.id);
   const tables = await createTables(restaurants[0].id);
   const staff = await createStaff(restaurants[0].id);
-  const queues = await createQueues(restaurants[0].id, customers);
+  const queues = await createQueues(restaurants[0].id, customers, tables);
   const meals = await createMeals(restaurants[0].id);
 
   // Create an order with the first queue, table, and customer

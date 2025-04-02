@@ -79,7 +79,13 @@ export class TablesController {
     description: 'Get table of largest party size',
   })
   @Get('largest-party-size/:restaurantId')
-  getTableofLargestPartySize(@Param('restaurantId') restaurantId: string) {
-    return this.tablesService.getTableofLargestPartySize(restaurantId);
+  getTableofLargestPartySize(
+    @Param('restaurantId') restaurantId: string,
+    @Query('timeSlot') timeSlot: string,
+  ) {
+    return this.tablesService.getTableofLargestPartySizeAvailable(
+      restaurantId,
+      timeSlot,
+    );
   }
 }
