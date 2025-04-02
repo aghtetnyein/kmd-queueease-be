@@ -108,9 +108,9 @@ async function createRestaurant(adminId: string) {
       qrCode: 'some-qr-code-1',
       sharedLink: 'http://example.com/restaurant-1',
       openDays: [1, 2, 3, 4, 5],
-      openHour: '10:30',
-      closeHour: '22:30',
-      slotDurationInMin: 30,
+      openHour: '10:00',
+      closeHour: '22:00',
+      slotDurationInMin: 60,
     },
     {
       name: 'Sushi Paradise',
@@ -121,7 +121,7 @@ async function createRestaurant(adminId: string) {
       openDays: [1, 2, 3, 4, 5, 6],
       openHour: '11:00',
       closeHour: '23:00',
-      slotDurationInMin: 45,
+      slotDurationInMin: 60,
     },
     {
       name: 'Italian Villa',
@@ -132,7 +132,7 @@ async function createRestaurant(adminId: string) {
       openDays: [2, 3, 4, 5, 6, 7],
       openHour: '12:00',
       closeHour: '21:00',
-      slotDurationInMin: 30,
+      slotDurationInMin: 90,
     },
     {
       name: 'Spice Garden',
@@ -143,7 +143,7 @@ async function createRestaurant(adminId: string) {
       openDays: [1, 2, 3, 4, 5, 6, 7],
       openHour: '11:30',
       closeHour: '22:30',
-      slotDurationInMin: 40,
+      slotDurationInMin: 120,
     },
     {
       name: 'BBQ House',
@@ -154,7 +154,7 @@ async function createRestaurant(adminId: string) {
       openDays: [3, 4, 5, 6, 7],
       openHour: '16:00',
       closeHour: '23:00',
-      slotDurationInMin: 60,
+      slotDurationInMin: 120,
     },
   ];
 
