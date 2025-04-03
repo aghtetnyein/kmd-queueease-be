@@ -8,10 +8,12 @@ import { UpdateStaffDto } from './dto/update-staff.dto';
 export class StaffsService {
   constructor(private readonly prisma: PrismaService) {}
   async getAllStaffs({
+    restaurant_id,
     page = '1',
     page_size = '20',
     search,
   }: {
+    restaurant_id: string;
     page?: string;
     page_size?: string;
     search?: string;
@@ -25,10 +27,15 @@ export class StaffsService {
       [staffs, total] = await Promise.all([
         this.prisma.staff.findMany({
           where: {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { phoneNo: { contains: search, mode: 'insensitive' } },
-              { role: { contains: search, mode: 'insensitive' } },
+            AND: [
+              { restaurantId: restaurant_id },
+              {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { phoneNo: { contains: search, mode: 'insensitive' } },
+                  { role: { contains: search, mode: 'insensitive' } },
+                ],
+              },
             ],
           },
           skip,
@@ -37,10 +44,15 @@ export class StaffsService {
         }),
         this.prisma.staff.count({
           where: {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { phoneNo: { contains: search, mode: 'insensitive' } },
-              { role: { contains: search, mode: 'insensitive' } },
+            AND: [
+              { restaurantId: restaurant_id },
+              {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { phoneNo: { contains: search, mode: 'insensitive' } },
+                  { role: { contains: search, mode: 'insensitive' } },
+                ],
+              },
             ],
           },
         }),
@@ -48,11 +60,14 @@ export class StaffsService {
     } else {
       [staffs, total] = await Promise.all([
         this.prisma.staff.findMany({
+          where: { restaurantId: restaurant_id },
           skip,
           take: Number(page_size),
           orderBy: { createdAt: 'desc' },
         }),
-        this.prisma.staff.count(),
+        this.prisma.staff.count({
+          where: { restaurantId: restaurant_id },
+        }),
       ]);
     }
 

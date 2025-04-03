@@ -8,6 +8,7 @@ import { PrismaService } from 'libs/helpers/src';
 import { startOfDay, endOfDay } from 'date-fns';
 import { CreateQueueDto } from './dto/create-queue.dto';
 import { TablesService } from 'src/tables/tables.service';
+import { QueueProgressStatus, QueueStatus } from '@prisma/client';
 
 @Injectable()
 export class QueueService {
@@ -164,6 +165,22 @@ export class QueueService {
     if (!queue) {
       throw new NotFoundException('Queue not found');
     }
+
+    return queue;
+  }
+
+  async updateQueueStatuses(
+    id: string,
+    status?: string,
+    progressStatus?: string,
+  ) {
+    const queue = await this.prisma.queue.update({
+      where: { id },
+      data: {
+        status: status as QueueStatus,
+        progressStatus: progressStatus as QueueProgressStatus,
+      },
+    });
 
     return queue;
   }

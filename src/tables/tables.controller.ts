@@ -32,7 +32,13 @@ export class TablesController {
   })
   @Get('')
   getAllTables(
-    @Query() query: { page?: string; page_size?: string; search?: string },
+    @Query()
+    query: {
+      restaurant_id: string;
+      page?: string;
+      page_size?: string;
+      search?: string;
+    },
   ) {
     return this.tablesService.getAllTables(query);
   }

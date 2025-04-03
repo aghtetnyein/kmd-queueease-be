@@ -1,9 +1,8 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
-import { Table, TableStatus } from '@prisma/client';
+import { Table } from '@prisma/client';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
-import { parse } from 'date-fns';
 import { QueueService } from 'src/queues/queue.service';
 @Injectable()
 export class TablesService {
@@ -13,13 +12,14 @@ export class TablesService {
     private readonly queueService: QueueService,
   ) {}
   async getAllTables({
+    restaurant_id,
     page = '1',
     page_size = '20',
     search,
   }: {
+    restaurant_id: string;
     page?: string;
     page_size?: string;
-    status?: string;
     search?: string;
   }) {
     const skip = (Number(page) - 1) * Number(page_size);
@@ -31,7 +31,10 @@ export class TablesService {
       [tables, total] = await Promise.all([
         this.prisma.table.findMany({
           where: {
-            AND: [{ tableNo: { contains: search, mode: 'insensitive' } }],
+            AND: [
+              { restaurantId: restaurant_id },
+              { tableNo: { contains: search, mode: 'insensitive' } },
+            ],
           },
           skip,
           take: Number(page_size),
@@ -39,18 +42,28 @@ export class TablesService {
         }),
         this.prisma.table.count({
           where: {
-            AND: [{ tableNo: { contains: search, mode: 'insensitive' } }],
+            AND: [
+              { restaurantId: restaurant_id },
+              { tableNo: { contains: search, mode: 'insensitive' } },
+            ],
           },
         }),
       ]);
     } else {
       [tables, total] = await Promise.all([
         this.prisma.table.findMany({
+          where: {
+            restaurantId: restaurant_id,
+          },
           skip,
           take: Number(page_size),
           orderBy: { createdAt: 'desc' },
         }),
-        this.prisma.table.count({}),
+        this.prisma.table.count({
+          where: {
+            restaurantId: restaurant_id,
+          },
+        }),
       ]);
     }
 

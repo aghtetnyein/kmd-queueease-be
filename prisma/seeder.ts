@@ -424,10 +424,17 @@ async function main() {
   const customers = await createCustomers();
   const restaurants = await createRestaurant(admin.id);
   const tables = await createTables(restaurants[0].id);
+  const moreTables = await createTables(restaurants[1].id);
   const staff = await createStaff(restaurants[0].id);
+  const moreStaff = await createStaff(restaurants[1].id);
   const queues = await createQueues(restaurants[0].id, customers, tables);
+  const moreQueues = await createQueues(
+    restaurants[1].id,
+    customers,
+    moreTables,
+  );
   const meals = await createMeals(restaurants[0].id);
-
+  const moreMeals = await createMeals(restaurants[1].id);
   // Create an order with the first queue, table, and customer
   const order = await createOrders(
     queues[0].id,

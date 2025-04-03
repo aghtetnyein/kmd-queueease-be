@@ -8,10 +8,12 @@ import { UpdateMealDto } from './dto/update-meal.dto';
 export class MealsService {
   constructor(private readonly prisma: PrismaService) {}
   async getAllMeals({
+    restaurant_id,
     page = '1',
     page_size = '20',
     search,
   }: {
+    restaurant_id: string;
     page?: string;
     page_size?: string;
     search?: string;
@@ -25,9 +27,14 @@ export class MealsService {
       [meals, total] = await Promise.all([
         this.prisma.meal.findMany({
           where: {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { category: { contains: search, mode: 'insensitive' } },
+            AND: [
+              { restaurantId: restaurant_id },
+              {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { category: { contains: search, mode: 'insensitive' } },
+                ],
+              },
             ],
           },
           skip,
@@ -36,9 +43,14 @@ export class MealsService {
         }),
         this.prisma.meal.count({
           where: {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { category: { contains: search, mode: 'insensitive' } },
+            AND: [
+              { restaurantId: restaurant_id },
+              {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' } },
+                  { category: { contains: search, mode: 'insensitive' } },
+                ],
+              },
             ],
           },
         }),
@@ -46,11 +58,14 @@ export class MealsService {
     } else {
       [meals, total] = await Promise.all([
         this.prisma.meal.findMany({
+          where: { restaurantId: restaurant_id },
           skip,
           take: Number(page_size),
           orderBy: { createdAt: 'desc' },
         }),
-        this.prisma.meal.count(),
+        this.prisma.meal.count({
+          where: { restaurantId: restaurant_id },
+        }),
       ]);
     }
 

@@ -32,7 +32,13 @@ export class MealsController {
   })
   @Get('')
   getAllStaffs(
-    @Query() query: { page?: string; page_size?: string; search?: string },
+    @Query()
+    query: {
+      restaurant_id: string;
+      page?: string;
+      page_size?: string;
+      search?: string;
+    },
   ) {
     return this.mealsService.getAllMeals(query);
   }

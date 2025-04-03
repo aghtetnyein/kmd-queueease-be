@@ -1,9 +1,10 @@
-import { Controller, Get, Param, Query, Post, Body } from '@nestjs/common';
+import { Controller, Get, Param, Query, Post, Body, Put } from '@nestjs/common';
 import { QueueService } from './queue.service';
 import { HttpExceptionFilter } from 'libs/helpers/src/http-exception.filter';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UseFilters } from '@nestjs/common';
 import { CreateQueueDto } from './dto/create-queue.dto';
+import { UpdateQueueStatusDto } from './dto/update-queue-status.dto';
 
 @Controller('queues')
 @UseFilters(HttpExceptionFilter)
@@ -55,5 +56,22 @@ export class QueueController {
   @Get(':id')
   getQueueById(@Param('id') id: string) {
     return this.queueService.getQueueById(id);
+  }
+
+  // Update a queue status
+  @ApiOperation({
+    summary: 'Update a queue status',
+    description: 'Update a queue status',
+  })
+  @Put('update-status/:id')
+  updateQueueStatus(
+    @Param('id') id: string,
+    @Body() body: UpdateQueueStatusDto,
+  ) {
+    return this.queueService.updateQueueStatuses(
+      id,
+      body.status,
+      body.progressStatus,
+    );
   }
 }
