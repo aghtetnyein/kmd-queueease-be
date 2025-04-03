@@ -5,10 +5,10 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from 'src/admins/guards/jwt-auth.guard';
-import { BookingsModule } from 'src/bookings/bookings.module';
+import { QueueModule } from 'src/queues/queue.module';
 
 @Module({
-  imports: [PrismaModule, forwardRef(() => BookingsModule)],
+  imports: [PrismaModule, forwardRef(() => QueueModule)],
   controllers: [TablesController],
   providers: [TablesService, JwtService, ConfigService, JwtAuthGuard],
   exports: [TablesService],

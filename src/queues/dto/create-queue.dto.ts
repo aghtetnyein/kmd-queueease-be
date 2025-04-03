@@ -1,7 +1,13 @@
-import { IsMongoId, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsMongoId,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateBookingDto {
+export class CreateQueueDto {
   @IsNotEmpty()
   @IsString()
   @IsMongoId()
@@ -39,7 +45,15 @@ export class CreateBookingDto {
   @IsString()
   @ApiProperty({
     example: '2025-03-31T10:00:00.000Z',
-    description: 'The selected time slot of the booking',
+    description: 'The selected time slot of the queue',
   })
   selectedSlot: string;
+
+  @IsNotEmpty()
+  @IsEnum(['BOOKING', 'WAITLIST'])
+  @ApiProperty({
+    example: 'BOOKING',
+    description: 'The type of the queue',
+  })
+  queueType: 'BOOKING' | 'WAITLIST';
 }

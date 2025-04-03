@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { BookingsService } from './bookings.service';
-import { BookingsController } from './bookings.controller';
+import { QueueService } from './queue.service';
+import { QueueController } from './queue.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -9,8 +9,8 @@ import { TablesModule } from 'src/tables/tables.module';
 
 @Module({
   imports: [PrismaModule, forwardRef(() => TablesModule)],
-  controllers: [BookingsController],
-  providers: [BookingsService, JwtService, ConfigService, JwtAuthGuard],
-  exports: [BookingsService],
+  controllers: [QueueController],
+  providers: [QueueService, JwtService, ConfigService, JwtAuthGuard],
+  exports: [QueueService],
 })
-export class BookingsModule {}
+export class QueueModule {}

@@ -219,12 +219,20 @@ async function createQueues(
   customers: any[],
   tables: any[],
 ) {
+  const generateQueueNo = (table: any, timeSlot: Date) => {
+    const month = (timeSlot.getMonth() + 1).toString().padStart(2, '0');
+    const day = timeSlot.getDate().toString().padStart(2, '0');
+    const hours = timeSlot.getHours().toString().padStart(2, '0');
+    const minutes = timeSlot.getMinutes().toString().padStart(2, '0');
+    return `${table.tableNo}-${month}${day}-${hours}${minutes}`;
+  };
+
   const queuesData = [
     {
       restaurantId,
       customerId: customers[0].id,
-      status: 'WAITLIST' as const,
-      progressStatus: 'PENDING' as const,
+      status: 'COMPLETED' as const,
+      progressStatus: 'CONFIRMED' as const,
       partySize: 2,
       position: 1,
       tableId: tables[0].id,
@@ -240,8 +248,8 @@ async function createQueues(
     {
       restaurantId,
       customerId: customers[1].id,
-      status: 'BOOKING' as const,
-      progressStatus: 'PENDING' as const,
+      status: 'COMPLETED' as const,
+      progressStatus: 'CONFIRMED' as const,
       partySize: 3,
       tableId: tables[0].id,
       timeSlot: new Date(new Date().setHours(19, 0, 0, 0)),
@@ -249,8 +257,8 @@ async function createQueues(
     {
       restaurantId,
       customerId: customers[1].id,
-      status: 'BOOKING' as const,
-      progressStatus: 'PENDING' as const,
+      status: 'COMPLETED' as const,
+      progressStatus: 'CONFIRMED' as const,
       partySize: 2,
       tableId: tables[1].id,
       timeSlot: new Date(new Date().setHours(19, 0, 0, 0)),
@@ -258,8 +266,8 @@ async function createQueues(
     {
       restaurantId,
       customerId: customers[3].id,
-      status: 'BOOKING' as const,
-      progressStatus: 'PENDING' as const,
+      status: 'WAITLIST' as const,
+      progressStatus: 'CONFIRMED' as const,
       partySize: 2,
       tableId: tables[0].id,
       timeSlot: new Date(new Date().setHours(20, 0, 0, 0)),
@@ -334,18 +342,20 @@ async function createQueues(
 
   const queues = [];
   for (const data of queuesData) {
-    const { tableId, ...queueData } = data;
+    const { tableId, timeSlot, ...queueData } = data;
+    const table = tables.find((t) => t.id === tableId);
+    const queueNo = generateQueueNo(table, timeSlot);
+
     const newQueue = await prisma.queue.create({
-      data: { ...queueData, restaurantId },
-    });
-    queues.push(newQueue);
-    await prisma.tableQueue.create({
       data: {
+        ...queueData,
+        restaurantId,
         tableId,
-        queueId: newQueue.id,
-        status: 'OCCUPIED',
+        timeSlot,
+        queueNo,
       },
     });
+    queues.push(newQueue);
   }
   return queues;
 }

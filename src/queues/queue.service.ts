@@ -1,27 +1,27 @@
 import {
   Injectable,
-  ConflictException,
   NotFoundException,
   Inject,
   forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
-import { parse, startOfDay, endOfDay } from 'date-fns';
-import { CreateBookingDto } from './dto/create-booking.dto';
+import { startOfDay, endOfDay } from 'date-fns';
+import { CreateQueueDto } from './dto/create-queue.dto';
 import { TablesService } from 'src/tables/tables.service';
 
 @Injectable()
-export class BookingsService {
+export class QueueService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => TablesService))
     private readonly tablesService: TablesService,
   ) {}
 
-  async getAllBookingsByRestaurantIdAndDay(
+  async getAllQueuesByRestaurantIdAndDay(
     day: string,
     restaurantId: string,
     compareLogic: 'equals' | 'between',
+    queueType?: 'BOOKING' | 'WAITLIST',
   ) {
     const timeSlotCompareLogic =
       compareLogic === 'between'
@@ -38,72 +38,63 @@ export class BookingsService {
       where: { restaurantId },
     });
 
-    const bookings = await this.prisma.queue.findMany({
+    const queues = await this.prisma.queue.findMany({
       where: {
         timeSlot: timeSlotCompareLogic,
-        status: 'BOOKING',
+        ...(queueType && { status: queueType }),
         restaurantId,
       },
       include: {
         customer: true,
-        tableQueues: {
-          include: {
-            table: true,
-          },
-        },
       },
       orderBy: {
         timeSlot: 'asc',
       },
     });
 
-    // Group bookings by timeslot
-    const groupedBookings = bookings.reduce(
-      (acc, booking) => {
-        const timeSlot = booking.timeSlot.toISOString();
+    // Group queues by timeslot
+    const groupedQueues = queues.reduce(
+      (acc, queue) => {
+        const timeSlot = queue.timeSlot.toISOString();
         if (!acc[timeSlot]) {
           acc[timeSlot] = {
-            bookings: [],
+            queues: [],
             availableTables: [...allTables], // Start with all tables
             availableTableCount: allTables.length,
           };
         }
 
-        // Add booking to the timeslot
-        acc[timeSlot].bookings.push(booking);
+        // Add queue to the timeslot
+        acc[timeSlot].queues.push(queue);
 
         // Remove occupied tables from available tables
-        booking.tableQueues.forEach((tableQueue) => {
-          if (
-            tableQueue.status === 'OCCUPIED' ||
-            tableQueue.status === 'RESERVED'
-          ) {
-            acc[timeSlot].availableTables = acc[
-              timeSlot
-            ].availableTables.filter(
-              (table) => table.id !== tableQueue.table.id,
-            );
-            acc[timeSlot].availableTableCount =
-              acc[timeSlot].availableTables.length;
-          }
-        });
+        if (
+          queue.tableStatus === 'OCCUPIED' ||
+          queue.tableStatus === 'RESERVED'
+        ) {
+          acc[timeSlot].availableTables = acc[timeSlot].availableTables.filter(
+            (table) => table.id !== queue.tableId,
+          );
+          acc[timeSlot].availableTableCount =
+            acc[timeSlot].availableTables.length;
+        }
 
         return acc;
       },
       {} as Record<
         string,
         {
-          bookings: typeof bookings;
+          queues: typeof queues;
           availableTables: typeof allTables;
           availableTableCount: number;
         }
       >,
     );
 
-    return groupedBookings;
+    return groupedQueues;
   }
 
-  async createBooking(data: CreateBookingDto) {
+  async createQueue(data: CreateQueueDto) {
     let customer = await this.prisma.customer.findUnique({
       where: { phoneNo: data.phoneNo },
     });
@@ -136,49 +127,44 @@ export class BookingsService {
       );
     }
 
-    const booking = await this.prisma.queue.create({
+    // Generate queueNo
+    const month = (timeSlot.getMonth() + 1).toString().padStart(2, '0');
+    const day = timeSlot.getDate().toString().padStart(2, '0');
+    const hours = timeSlot.getHours().toString().padStart(2, '0');
+    const minutes = timeSlot.getMinutes().toString().padStart(2, '0');
+    const queueNo = `${availableTable.tableNo}-${month}${day}-${hours}${minutes}`;
+
+    const queue = await this.prisma.queue.create({
       data: {
         restaurantId: data.restaurantId,
         customerId: customer.id,
         partySize: partySize,
         timeSlot: timeSlot,
-        status: 'BOOKING',
+        status: data.queueType,
         progressStatus: 'PENDING',
-      },
-    });
-
-    const tableQueue = await this.prisma.tableQueue.create({
-      data: {
         tableId: availableTable.id,
-        queueId: booking.id,
-        status: 'RESERVED',
-      },
-      include: {
-        table: true,
-        queue: true,
+        tableStatus: 'RESERVED',
+        queueNo: queueNo,
       },
     });
 
-    return tableQueue;
+    return queue;
   }
 
-  async getBookingById(id: string) {
-    const booking = await this.prisma.tableQueue.findUnique({
+  async getQueueById(id: string) {
+    const queue = await this.prisma.queue.findUnique({
       where: { id },
       include: {
         table: true,
-        queue: {
-          include: {
-            restaurant: true,
-          },
-        },
+        customer: true,
+        restaurant: true,
       },
     });
 
-    if (!booking) {
-      throw new NotFoundException('Booking not found');
+    if (!queue) {
+      throw new NotFoundException('Queue not found');
     }
 
-    return booking;
+    return queue;
   }
 }

@@ -3,14 +3,14 @@ import { PrismaService } from 'libs/helpers/src';
 import { Table, TableStatus } from '@prisma/client';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
-import { BookingsService } from 'src/bookings/bookings.service';
 import { parse } from 'date-fns';
+import { QueueService } from 'src/queues/queue.service';
 @Injectable()
 export class TablesService {
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(forwardRef(() => BookingsService))
-    private readonly bookingsService: BookingsService,
+    @Inject(forwardRef(() => QueueService))
+    private readonly queueService: QueueService,
   ) {}
   async getAllTables({
     page = '1',
@@ -68,33 +68,6 @@ export class TablesService {
     };
   }
 
-  async getAllTablesForTimeSlot(
-    restaurantId: string,
-    timeSlot: string,
-    status?: TableStatus,
-  ) {
-    const queueTables = await this.prisma.tableQueue.findMany({
-      where: {
-        table: {
-          restaurantId,
-        },
-        ...(status && { status }),
-        // queue: {
-        //   timeSlot: {
-        //     equals: new Date(timeSlot),
-        //   },
-        // },
-      },
-      orderBy: {
-        table: {
-          tableSize: 'asc',
-        },
-      },
-    });
-    console.log(queueTables);
-    return queueTables;
-  }
-
   async addTable(data: CreateTableDto) {
     return this.prisma.table.create({
       data: data,
@@ -125,12 +98,11 @@ export class TablesService {
 
     const table = allTables.find((table) => table.tableSize >= partySize);
 
-    const bookings =
-      await this.bookingsService.getAllBookingsByRestaurantIdAndDay(
-        timeSlot,
-        restaurantId,
-        'equals',
-      );
+    const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay(
+      timeSlot,
+      restaurantId,
+      'equals',
+    );
 
     if (!bookings[`${timeSlot}`]) {
       return table;
@@ -152,12 +124,11 @@ export class TablesService {
       orderBy: { tableSize: 'desc' },
     });
 
-    const bookings =
-      await this.bookingsService.getAllBookingsByRestaurantIdAndDay(
-        timeSlot,
-        restaurantId,
-        'equals',
-      );
+    const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay(
+      timeSlot,
+      restaurantId,
+      'equals',
+    );
 
     if (!bookings[`${timeSlot}`]) {
       return { availableTableSize: table.tableSize };

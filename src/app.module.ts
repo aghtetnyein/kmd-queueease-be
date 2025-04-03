@@ -9,8 +9,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { TablesModule } from './tables/tables.module';
 import { StaffsModule } from './staffs/staffs.module';
 import { MealsModule } from './meals/meals.module';
-import { BookingsModule } from './bookings/bookings.module';
 import { join } from 'path';
+import { QueueModule } from './queues/queue.module';
 console.log('Serving static files from:', join(process.cwd(), 'uploads'));
 
 @Module({
@@ -26,7 +26,7 @@ console.log('Serving static files from:', join(process.cwd(), 'uploads'));
     TablesModule,
     StaffsModule,
     MealsModule,
-    BookingsModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [AppService],
