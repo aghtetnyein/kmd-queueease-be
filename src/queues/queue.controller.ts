@@ -6,6 +6,8 @@ import { UseFilters } from '@nestjs/common';
 import { CreateQueueDto } from './dto/create-queue.dto';
 import { UpdateQueueStatusDto } from './dto/update-queue-status.dto';
 import { QueueStatus } from '@prisma/client';
+import { endOfDay } from 'date-fns';
+import { startOfDay } from 'date-fns';
 
 @Controller('queues')
 @UseFilters(HttpExceptionFilter)
@@ -32,11 +34,13 @@ export class QueueController {
     @Query('day') day: string,
     @Query('restaurantId') restaurantId: string,
     @Query('queueType') queueType?: QueueStatus,
+    @Query('isForToday') isForToday?: boolean,
   ) {
     return this.queueService.getAllQueuesForHomePage({
       day,
       restaurantId,
       queueType,
+      isForToday,
     });
   }
 
@@ -48,11 +52,13 @@ export class QueueController {
     @Query('isForCustomerBooking') isForCustomerBooking?: boolean,
   ) {
     return this.queueService.getAllQueuesByRestaurantIdAndDay({
-      day,
       restaurantId,
-      compareLogic: 'between',
       queueType,
       isForCustomerBooking,
+      timeSlotCompareLogic: {
+        gte: startOfDay(day),
+        lte: endOfDay(day),
+      },
     });
   }
 
@@ -102,10 +108,11 @@ export class QueueController {
     @Param('id') id: string,
     @Body() body: UpdateQueueStatusDto,
   ) {
-    return this.queueService.updateQueueStatuses(
+    return this.queueService.updateQueueStatuses({
       id,
-      body.status,
-      body.progressStatus,
-    );
+      tableId: body.tableId,
+      status: body.status,
+      progressStatus: body.progressStatus,
+    });
   }
 }

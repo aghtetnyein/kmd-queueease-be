@@ -1,9 +1,11 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
-import { Table } from '@prisma/client';
+import { Table, TableStatus } from '@prisma/client';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { QueueService } from 'src/queues/queue.service';
+import { endOfDay } from 'date-fns';
+import { startOfDay } from 'date-fns';
 @Injectable()
 export class TablesService {
   constructor(
@@ -15,14 +17,20 @@ export class TablesService {
     restaurant_id,
     page = '1',
     page_size = '20',
+    status,
     search,
   }: {
     restaurant_id: string;
     page?: string;
     page_size?: string;
+    status?: TableStatus;
     search?: string;
   }) {
     const skip = (Number(page) - 1) * Number(page_size);
+    const statusFilter =
+      status && status.toLowerCase() !== 'all'
+        ? { status: { equals: status as TableStatus } }
+        : {};
 
     let tables: Table[];
     let total: number;
@@ -34,6 +42,7 @@ export class TablesService {
             AND: [
               { restaurantId: restaurant_id },
               { tableNo: { contains: search, mode: 'insensitive' } },
+              { ...statusFilter },
             ],
           },
           skip,
@@ -45,6 +54,7 @@ export class TablesService {
             AND: [
               { restaurantId: restaurant_id },
               { tableNo: { contains: search, mode: 'insensitive' } },
+              { ...statusFilter },
             ],
           },
         }),
@@ -54,6 +64,7 @@ export class TablesService {
         this.prisma.table.findMany({
           where: {
             restaurantId: restaurant_id,
+            ...statusFilter,
           },
           skip,
           take: Number(page_size),
@@ -62,6 +73,7 @@ export class TablesService {
         this.prisma.table.count({
           where: {
             restaurantId: restaurant_id,
+            ...statusFilter,
           },
         }),
       ]);
@@ -83,7 +95,7 @@ export class TablesService {
 
   async addTable(data: CreateTableDto) {
     return this.prisma.table.create({
-      data: data,
+      data: { ...data, status: 'AVAILABLE' },
     });
   }
 
@@ -100,6 +112,35 @@ export class TablesService {
     });
   }
 
+  async getAllAvailableTablesForToday(restaurantId: string) {
+    const today = new Date();
+
+    const allTables = await this.prisma.table.findMany({
+      where: { restaurantId, status: 'AVAILABLE' },
+    });
+
+    const tables = allTables.sort((a, b) => a.tableSize - b.tableSize);
+
+    const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay({
+      restaurantId,
+      queueType: 'SERVING',
+      timeSlotCompareLogic: {
+        gte: startOfDay(today),
+        lte: endOfDay(today),
+      },
+    });
+
+    console.log(bookings);
+
+    if (!bookings[`${today.toISOString()}`]) {
+      return tables;
+    }
+
+    const availableTables = bookings[`${today.toISOString()}`].availableTables;
+
+    return availableTables;
+  }
+
   async getNearestPartySizeAvailableTable(
     restaurantId: string,
     timeSlot: string,
@@ -114,9 +155,10 @@ export class TablesService {
       .sort((a, b) => a.tableSize - b.tableSize)[0];
 
     const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay({
-      day: timeSlot,
       restaurantId,
-      compareLogic: 'equals',
+      timeSlotCompareLogic: {
+        equals: new Date(timeSlot).toISOString(),
+      },
       isForCustomerBooking: true,
     });
 
@@ -141,9 +183,10 @@ export class TablesService {
     });
 
     const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay({
-      day: timeSlot,
       restaurantId,
-      compareLogic: 'equals',
+      timeSlotCompareLogic: {
+        equals: new Date(timeSlot).toISOString(),
+      },
       isForCustomerBooking: true,
     });
 

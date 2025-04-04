@@ -234,7 +234,6 @@ async function createQueues(
       status: 'COMPLETED' as const,
       progressStatus: 'CONFIRMED' as const,
       partySize: 2,
-      position: 1,
       tableId: tables[0].id,
       timeSlot: new Date(
         new Date(new Date().setDate(new Date().getDate() - 1)).setHours(

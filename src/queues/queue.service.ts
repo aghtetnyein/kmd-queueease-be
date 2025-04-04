@@ -3,6 +3,7 @@ import {
   NotFoundException,
   Inject,
   forwardRef,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'libs/helpers/src';
 import { startOfDay, endOfDay } from 'date-fns';
@@ -22,29 +23,42 @@ export class QueueService {
     day,
     restaurantId,
     queueType,
+    isForToday,
   }: {
     day: string;
     restaurantId: string;
     queueType?: QueueStatus;
+    isForToday?: boolean;
   }) {
-    const queues = await this.prisma.queue.findMany({
-      where: {
-        restaurantId,
-        OR: [
-          {
+    const timeSlotCompareLogic = isForToday
+      ? queueType === 'BOOKING'
+        ? {
             timeSlot: {
               gte: startOfDay(day),
               lte: endOfDay(day),
             },
+          }
+        : {
+            updatedAt: {
+              gte: startOfDay(day),
+              lte: endOfDay(day),
+            },
+          }
+      : {
+          timeSlot: {
+            gte: startOfDay(day),
+            lte: endOfDay(day),
           },
-          {
-            timeSlot: null,
-          },
-        ],
+        };
+
+    const queues = await this.prisma.queue.findMany({
+      where: {
+        restaurantId,
+        ...timeSlotCompareLogic,
         ...(queueType && { status: queueType }),
       },
       orderBy: {
-        createdAt: 'desc',
+        updatedAt: 'desc',
       },
       include: {
         table: true,
@@ -56,28 +70,16 @@ export class QueueService {
   }
 
   async getAllQueuesByRestaurantIdAndDay({
-    day,
     restaurantId,
-    compareLogic,
+    timeSlotCompareLogic,
     queueType,
     isForCustomerBooking = false,
   }: {
-    day: string;
     restaurantId: string;
-    compareLogic: 'equals' | 'between';
+    timeSlotCompareLogic?: any;
     queueType?: QueueStatus;
     isForCustomerBooking?: boolean;
   }) {
-    const timeSlotCompareLogic =
-      compareLogic === 'between'
-        ? {
-            gte: startOfDay(day),
-            lte: endOfDay(day),
-          }
-        : {
-            equals: new Date(day).toISOString(),
-          };
-
     // Get all tables for this restaurant
     const allTables = await this.prisma.table.findMany({
       where: { restaurantId },
@@ -85,7 +87,9 @@ export class QueueService {
 
     const queues = await this.prisma.queue.findMany({
       where: {
-        timeSlot: timeSlotCompareLogic,
+        ...(timeSlotCompareLogic && {
+          timeSlot: timeSlotCompareLogic,
+        }),
         ...(queueType && { status: queueType }),
         ...(isForCustomerBooking.toString() === 'true' && {
           status: {
@@ -119,10 +123,7 @@ export class QueueService {
         acc[timeSlot].queues.push(queue);
 
         // Remove occupied tables from available tables
-        if (
-          queue.tableStatus === 'OCCUPIED' ||
-          queue.tableStatus === 'RESERVED'
-        ) {
+        if (queue.tableStatus === 'RESERVED') {
           acc[timeSlot].availableTables = acc[timeSlot].availableTables.filter(
             (table) => table.id !== queue.tableId,
           );
@@ -156,20 +157,31 @@ export class QueueService {
       where: { id: restaurantId },
     });
 
+    const availableTableCount = await this.prisma.table.count({
+      where: {
+        restaurantId,
+        status: 'AVAILABLE',
+      },
+    });
     const waitlistCount = await this.prisma.queue.count({
       where: {
         restaurantId,
         status: 'WAITLIST',
-        createdAt: {
+        updatedAt: {
           gte: startOfDay(day),
           lte: endOfDay(day),
         },
       },
     });
-    const estimatedWaitTime = waitlistCount * restaurant.slotDurationInMin;
+    const totalCount =
+      waitlistCount + 1 - availableTableCount < 0
+        ? 0
+        : waitlistCount + 1 - availableTableCount;
+    console.log(waitlistCount, availableTableCount, totalCount);
+    const estimatedWaitTime = totalCount * restaurant.slotDurationInMin;
 
     return {
-      waitlistCount,
+      waitlistCount: totalCount,
       estimatedWaitTime: Math.max(estimatedWaitTime, 1),
     };
   }
@@ -187,16 +199,44 @@ export class QueueService {
           name: data.name,
         },
       });
+    } else {
+      await this.prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          name: data.name,
+        },
+      });
     }
 
-    if (data.queueType === 'WAITLIST') {
-      const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
+    // Generate and check queue number
+    let queueNo: string;
+    let existingQueue: any;
+    do {
+      const firstLetter = String.fromCharCode(
+        65 + Math.floor(Math.random() * 26),
+      ); // A-Z
+      const secondLetter = String.fromCharCode(
+        65 + Math.floor(Math.random() * 26),
+      ); // A-Z
       const now = new Date();
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
       const day = now.getDate().toString().padStart(2, '0');
       const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const queueNo = `${letter}${month}${day}${hours}${minutes}`;
+      queueNo = `${firstLetter}${secondLetter}-${day}${hours}`;
+
+      // Check if queue number already exists
+      existingQueue = await this.prisma.queue.findUnique({
+        where: { queueNo },
+      });
+    } while (existingQueue);
+
+    if (data.queueType === 'WAITLIST') {
+      const lastQueue = await this.prisma.queue.findFirst({
+        where: {
+          restaurantId: data.restaurantId,
+          status: 'WAITLIST',
+        },
+        orderBy: { position: 'desc' },
+      });
 
       const queue = await this.prisma.queue.create({
         data: {
@@ -209,6 +249,7 @@ export class QueueService {
           tableId: null,
           tableStatus: null,
           queueNo: queueNo,
+          position: lastQueue ? lastQueue.position + 1 : 1,
         },
       });
 
@@ -232,13 +273,6 @@ export class QueueService {
         'No available tables found for the specified party size',
       );
     }
-
-    // Generate queueNo
-    const month = (timeSlot.getMonth() + 1).toString().padStart(2, '0');
-    const day = timeSlot.getDate().toString().padStart(2, '0');
-    const hours = timeSlot.getHours().toString().padStart(2, '0');
-    const minutes = timeSlot.getMinutes().toString().padStart(2, '0');
-    const queueNo = `${availableTable.tableNo}-${month}${day}-${hours}${minutes}`;
 
     const queue = await this.prisma.queue.create({
       data: {
@@ -271,21 +305,80 @@ export class QueueService {
       throw new NotFoundException('Queue not found');
     }
 
+    if (queue.status === 'WAITLIST') {
+      const availableTableCount = await this.prisma.table.count({
+        where: {
+          restaurantId: queue.restaurantId,
+          status: 'AVAILABLE',
+        },
+      });
+      const waitlistCount = await this.prisma.queue.count({
+        where: {
+          restaurantId: queue.restaurantId,
+          queueNo: {
+            not: queue.queueNo,
+          },
+          status: 'WAITLIST',
+          updatedAt: {
+            lte: queue.updatedAt,
+          },
+        },
+      });
+      const totalCount =
+        waitlistCount + 1 - availableTableCount < 0
+          ? 0
+          : waitlistCount + 1 - availableTableCount;
+      const estimatedWaitTime = totalCount * queue.restaurant.slotDurationInMin;
+
+      return {
+        ...queue,
+        waitlistCount: totalCount,
+        estimatedWaitTime,
+      };
+    }
+
+    if (queue.status === 'SERVING') {
+      throw new BadRequestException('Queue is already serving');
+    }
+
     return queue;
   }
 
-  async updateQueueStatuses(
-    id: string,
-    status?: string,
-    progressStatus?: string,
-  ) {
+  async updateQueueStatuses({
+    id,
+    tableId,
+    status,
+    progressStatus,
+  }: {
+    id: string;
+    tableId: string;
+    status: QueueStatus;
+    progressStatus: QueueProgressStatus;
+  }) {
     const queue = await this.prisma.queue.update({
       where: { id },
       data: {
-        status: status as QueueStatus,
-        progressStatus: progressStatus as QueueProgressStatus,
+        ...(tableId && { tableId }),
+        ...(status && { status: status as QueueStatus }),
+        ...(progressStatus && {
+          progressStatus: progressStatus as QueueProgressStatus,
+        }),
       },
     });
+
+    if (status === 'SERVING') {
+      await this.prisma.table.update({
+        where: { id: tableId },
+        data: { status: 'RESERVED' },
+      });
+    }
+
+    if (status === 'COMPLETED') {
+      await this.prisma.table.update({
+        where: { id: queue.tableId },
+        data: { status: 'AVAILABLE' },
+      });
+    }
 
     return queue;
   }

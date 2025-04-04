@@ -1,8 +1,17 @@
-import { IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsMongoId, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { QueueStatus, QueueProgressStatus } from '@prisma/client';
 
 export class UpdateQueueStatusDto {
+  @IsOptional()
+  @IsMongoId()
+  @ApiProperty({
+    example: '123',
+    description: 'The table id of the queue',
+    required: false,
+  })
+  tableId?: string;
+
   @IsOptional()
   @IsEnum(QueueStatus)
   @ApiProperty({

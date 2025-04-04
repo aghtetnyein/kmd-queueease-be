@@ -96,7 +96,6 @@ model Meal {
 
 enum TableStatus {
   AVAILABLE
-  OCCUPIED
   RESERVED
 }
 
@@ -105,6 +104,7 @@ model Table {
   id        String @id @default(auto()) @map("_id") @db.ObjectId
   tableNo   String
   tableSize Int
+  status    TableStatus @default(AVAILABLE)
 
   restaurantId String     @db.ObjectId
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
@@ -181,8 +181,8 @@ model Queue {
   progressStatus QueueProgressStatus
   tableStatus    TableStatus?         @default(AVAILABLE)
   partySize      Int
-  position       Int?
   timeSlot       DateTime?
+  position       Int?
 
   orders Order[]
 

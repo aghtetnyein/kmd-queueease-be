@@ -92,4 +92,14 @@ export class TablesController {
       timeSlot,
     );
   }
+
+  // Get all available tables for today
+  @ApiOperation({
+    summary: 'Get all available tables for today',
+    description: 'Get all available tables for today',
+  })
+  @Get('available-for-today/:restaurantId')
+  getAvailableTablesForToday(@Param('restaurantId') restaurantId: string) {
+    return this.tablesService.getAllAvailableTablesForToday(restaurantId);
+  }
 }
