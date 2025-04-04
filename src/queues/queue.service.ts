@@ -18,6 +18,43 @@ export class QueueService {
     private readonly tablesService: TablesService,
   ) {}
 
+  async getAllQueuesForHomePage({
+    day,
+    restaurantId,
+    queueType,
+  }: {
+    day: string;
+    restaurantId: string;
+    queueType?: QueueStatus;
+  }) {
+    const queues = await this.prisma.queue.findMany({
+      where: {
+        restaurantId,
+        OR: [
+          {
+            timeSlot: {
+              gte: startOfDay(day),
+              lte: endOfDay(day),
+            },
+          },
+          {
+            timeSlot: null,
+          },
+        ],
+        ...(queueType && { status: queueType }),
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        table: true,
+        customer: true,
+      },
+    });
+
+    return queues;
+  }
+
   async getAllQueuesByRestaurantIdAndDay({
     day,
     restaurantId,
@@ -108,6 +145,35 @@ export class QueueService {
     return groupedQueues;
   }
 
+  async getWaitlistByRestaurantIdAndDay({
+    day,
+    restaurantId,
+  }: {
+    day: string;
+    restaurantId: string;
+  }) {
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    });
+
+    const waitlistCount = await this.prisma.queue.count({
+      where: {
+        restaurantId,
+        status: 'WAITLIST',
+        createdAt: {
+          gte: startOfDay(day),
+          lte: endOfDay(day),
+        },
+      },
+    });
+    const estimatedWaitTime = waitlistCount * restaurant.slotDurationInMin;
+
+    return {
+      waitlistCount,
+      estimatedWaitTime: Math.max(estimatedWaitTime, 1),
+    };
+  }
+
   async createQueue(data: CreateQueueDto) {
     let customer = await this.prisma.customer.findUnique({
       where: { phoneNo: data.phoneNo },
@@ -121,6 +187,32 @@ export class QueueService {
           name: data.name,
         },
       });
+    }
+
+    if (data.queueType === 'WAITLIST') {
+      const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
+      const now = new Date();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const queueNo = `${letter}${month}${day}${hours}${minutes}`;
+
+      const queue = await this.prisma.queue.create({
+        data: {
+          restaurantId: data.restaurantId,
+          customerId: customer.id,
+          partySize: Number(data.partySize),
+          timeSlot: null,
+          status: data.queueType,
+          progressStatus: 'CONFIRMED',
+          tableId: null,
+          tableStatus: null,
+          queueNo: queueNo,
+        },
+      });
+
+      return queue;
     }
 
     // Apply the time from selectedSlot to the selected date

@@ -174,12 +174,12 @@ model Queue {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   customerId   String     @db.ObjectId
   customer     Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  tableId      String     @db.ObjectId
-  table        Table      @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  tableId      String?     @db.ObjectId
+  table        Table?      @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
   status         QueueStatus
   progressStatus QueueProgressStatus
-  tableStatus    TableStatus         @default(AVAILABLE)
+  tableStatus    TableStatus?         @default(AVAILABLE)
   partySize      Int
   position       Int?
   timeSlot       DateTime?

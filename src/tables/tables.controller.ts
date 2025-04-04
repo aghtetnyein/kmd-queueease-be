@@ -24,8 +24,6 @@ export class TablesController {
   constructor(private readonly tablesService: TablesService) {}
 
   // Get all tables
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Get all tables',
     description: 'Get all tables',

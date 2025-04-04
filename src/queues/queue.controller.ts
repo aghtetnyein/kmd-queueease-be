@@ -27,6 +27,19 @@ export class QueueController {
       },
     },
   })
+  @Get('home-page')
+  getAllQueuesForHomePage(
+    @Query('day') day: string,
+    @Query('restaurantId') restaurantId: string,
+    @Query('queueType') queueType?: QueueStatus,
+  ) {
+    return this.queueService.getAllQueuesForHomePage({
+      day,
+      restaurantId,
+      queueType,
+    });
+  }
+
   @Get('')
   getAllQueuesByRestaurantIdAndDay(
     @Query('day') day: string,
@@ -40,6 +53,22 @@ export class QueueController {
       compareLogic: 'between',
       queueType,
       isForCustomerBooking,
+    });
+  }
+
+  // Get waitlist count and estimated wait time
+  @ApiOperation({
+    summary: 'Get waitlist count and estimated wait time',
+    description: 'Get waitlist count and estimated wait time',
+  })
+  @Get('waitlist')
+  getWaitlistByRestaurantIdAndDay(
+    @Query('restaurantId') restaurantId: string,
+    @Query('day') day: string,
+  ) {
+    return this.queueService.getWaitlistByRestaurantIdAndDay({
+      restaurantId,
+      day,
     });
   }
 
