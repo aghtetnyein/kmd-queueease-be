@@ -109,21 +109,24 @@ export class TablesService {
       where: { restaurantId },
     });
 
-    const table = allTables.find((table) => table.tableSize >= partySize);
+    const table = allTables
+      .filter((table) => table.tableSize >= partySize)
+      .sort((a, b) => a.tableSize - b.tableSize)[0];
 
-    const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay(
-      timeSlot,
+    const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay({
+      day: timeSlot,
       restaurantId,
-      'equals',
-    );
+      compareLogic: 'equals',
+      isForCustomerBooking: true,
+    });
 
     if (!bookings[`${timeSlot}`]) {
       return table;
     }
 
-    const nearestTable = bookings[`${timeSlot}`].availableTables.find(
-      (table) => table.tableSize >= partySize,
-    );
+    const nearestTable = bookings[`${timeSlot}`].availableTables
+      .filter((table) => table.tableSize >= partySize)
+      .sort((a, b) => a.tableSize - b.tableSize)[0];
 
     return nearestTable;
   }
@@ -137,16 +140,18 @@ export class TablesService {
       orderBy: { tableSize: 'desc' },
     });
 
-    const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay(
-      timeSlot,
+    const bookings = await this.queueService.getAllQueuesByRestaurantIdAndDay({
+      day: timeSlot,
       restaurantId,
-      'equals',
-    );
+      compareLogic: 'equals',
+      isForCustomerBooking: true,
+    });
 
     if (!bookings[`${timeSlot}`]) {
       return { availableTableSize: table.tableSize };
     }
 
+    console.log(bookings[`${timeSlot}`].availableTables);
     const largestAvailableTable = bookings[`${timeSlot}`].availableTables.sort(
       (a, b) => b.tableSize - a.tableSize,
     )[0];

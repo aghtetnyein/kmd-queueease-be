@@ -18,12 +18,19 @@ export class QueueService {
     private readonly tablesService: TablesService,
   ) {}
 
-  async getAllQueuesByRestaurantIdAndDay(
-    day: string,
-    restaurantId: string,
-    compareLogic: 'equals' | 'between',
-    queueType?: 'BOOKING' | 'WAITLIST',
-  ) {
+  async getAllQueuesByRestaurantIdAndDay({
+    day,
+    restaurantId,
+    compareLogic,
+    queueType,
+    isForCustomerBooking = false,
+  }: {
+    day: string;
+    restaurantId: string;
+    compareLogic: 'equals' | 'between';
+    queueType?: QueueStatus;
+    isForCustomerBooking?: boolean;
+  }) {
     const timeSlotCompareLogic =
       compareLogic === 'between'
         ? {
@@ -43,10 +50,16 @@ export class QueueService {
       where: {
         timeSlot: timeSlotCompareLogic,
         ...(queueType && { status: queueType }),
+        ...(isForCustomerBooking.toString() === 'true' && {
+          status: {
+            not: 'COMPLETED',
+          },
+        }),
         restaurantId,
       },
       include: {
         customer: true,
+        table: true,
       },
       orderBy: {
         timeSlot: 'asc',
@@ -142,7 +155,7 @@ export class QueueService {
         partySize: partySize,
         timeSlot: timeSlot,
         status: data.queueType,
-        progressStatus: 'PENDING',
+        progressStatus: 'CONFIRMED',
         tableId: availableTable.id,
         tableStatus: 'RESERVED',
         queueNo: queueNo,

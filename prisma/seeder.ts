@@ -290,15 +290,15 @@ async function createQueues(
       tableId: tables[1].id,
       timeSlot: new Date(new Date().setHours(21, 0, 0, 0)),
     },
-    ...new Array(4).fill(null).map((_, index) => ({
+    ...new Array(tables.length).fill(null).map((_, index) => ({
       restaurantId,
-      customerId: customers[2].id,
+      customerId: customers[index].id,
       status: 'BOOKING' as const,
       progressStatus: 'PENDING' as const,
       partySize: 4,
       tableId: tables[index].id,
       timeSlot: new Date(
-        new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
+        new Date(new Date().setDate(new Date().getDate() + 3)).setHours(
           11,
           0,
           0,
@@ -419,6 +419,8 @@ async function createNotifications(restaurantId: string, customerId: string) {
 
 async function main() {
   await clearDatabase();
+
+  return;
 
   const admin = await createAdmin();
   const customers = await createCustomers();

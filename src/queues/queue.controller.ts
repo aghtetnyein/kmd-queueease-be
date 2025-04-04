@@ -5,6 +5,7 @@ import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UseFilters } from '@nestjs/common';
 import { CreateQueueDto } from './dto/create-queue.dto';
 import { UpdateQueueStatusDto } from './dto/update-queue-status.dto';
+import { QueueStatus } from '@prisma/client';
 
 @Controller('queues')
 @UseFilters(HttpExceptionFilter)
@@ -30,12 +31,16 @@ export class QueueController {
   getAllQueuesByRestaurantIdAndDay(
     @Query('day') day: string,
     @Query('restaurantId') restaurantId: string,
+    @Query('queueType') queueType?: QueueStatus,
+    @Query('isForCustomerBooking') isForCustomerBooking?: boolean,
   ) {
-    return this.queueService.getAllQueuesByRestaurantIdAndDay(
+    return this.queueService.getAllQueuesByRestaurantIdAndDay({
       day,
       restaurantId,
-      'between',
-    );
+      compareLogic: 'between',
+      queueType,
+      isForCustomerBooking,
+    });
   }
 
   // Create a queue

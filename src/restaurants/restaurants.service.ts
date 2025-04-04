@@ -84,7 +84,7 @@ export class RestaurantService {
         openDays: [1, 2, 3, 4, 5],
         openHour: '10:00',
         closeHour: '22:00',
-        slotDurationInMin: 30,
+        slotDurationInMin: 60,
         admin: {
           connect: {
             id: admin.id,
