@@ -28,6 +28,7 @@ export const AdminProfileResponseSchema: SchemaObject = createResponseSchema({
         openHour: { type: 'string' },
         closeHour: { type: 'string' },
         slotDurationInMin: { type: 'number' },
+        slug: { type: 'string' },
       },
       required: [
         'name',
@@ -38,6 +39,7 @@ export const AdminProfileResponseSchema: SchemaObject = createResponseSchema({
         'openHour',
         'closeHour',
         'slotDurationInMin',
+        'slug',
       ],
     },
   },

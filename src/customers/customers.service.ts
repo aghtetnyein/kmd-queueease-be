@@ -243,4 +243,11 @@ export class CustomersService {
     });
     return { message: 'Password changed successfully' };
   }
+
+  async deleteCustomer(id: string) {
+    await this.prisma.customer.delete({
+      where: { id },
+    });
+    return { message: 'Customer deleted successfully' };
+  }
 }

@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Query,
   Req,
@@ -213,5 +215,17 @@ export class CustomersController {
     } catch (error) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
+  }
+
+  // Delete customer
+  @ApiBearerAuth()
+  @UseGuards(AdminJwtAuthGuard)
+  @ApiOperation({
+    summary: 'Delete customer',
+    description: 'Customer can delete their account',
+  })
+  @Delete(':id')
+  deleteCustomer(@Param('id') id: string) {
+    return this.customersService.deleteCustomer(id);
   }
 }

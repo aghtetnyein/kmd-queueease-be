@@ -49,6 +49,7 @@ export class AdminService {
             openHour: true,
             closeHour: true,
             slotDurationInMin: true,
+            slug: true,
           },
         },
       },
