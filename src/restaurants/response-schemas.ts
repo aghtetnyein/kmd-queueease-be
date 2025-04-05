@@ -9,7 +9,7 @@ export const CreateRestaurantResponseSchema: SchemaObject =
       id: { type: 'string' },
       name: { type: 'string' },
     },
-    required: ['id', 'name', 'location', 'qrCode', 'sharedLink'],
+    required: ['id', 'name', 'location'],
   });
 
 export const UpdateRestaurantResponseSchema: SchemaObject =
@@ -18,8 +18,6 @@ export const UpdateRestaurantResponseSchema: SchemaObject =
     properties: {
       name: { type: 'string' },
       location: { type: 'string' },
-      qrCode: { type: 'string' },
-      sharedLink: { type: 'string' },
     },
-    required: ['name', 'location', 'qrCode', 'sharedLink'],
+    required: ['name', 'location'],
   });

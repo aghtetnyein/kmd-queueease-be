@@ -11,7 +11,6 @@ function getHashedPassword(password: string) {
 // Helper function to clear all data
 async function clearDatabase() {
   const models = [
-    'notification',
     'meal',
     'order',
     'queue',
@@ -44,8 +43,6 @@ async function createRestaurant(adminId: string) {
       name: 'Brewery',
       slug: 'brewery',
       location: 'Bangkok, Thailand',
-      qrCode: '',
-      sharedLink: '',
       openDays: [1, 2, 3, 4, 5],
       openHour: '10:00',
       closeHour: '22:00',
@@ -76,9 +73,9 @@ async function createTables(restaurantId: string) {
 
 async function main() {
   await clearDatabase();
-  const admin = await createAdmin();
-  const restaurant = await createRestaurant(admin.id);
-  const tables = await createTables(restaurant.id);
+  // const admin = await createAdmin();
+  // const restaurant = await createRestaurant(admin.id);
+  // const tables = await createTables(restaurant.id);
 
   return;
 }

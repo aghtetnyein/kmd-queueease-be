@@ -130,8 +130,6 @@ export class TablesService {
       },
     });
 
-    console.log(bookings);
-
     if (!bookings[`${today.toISOString()}`]) {
       return tables;
     }
@@ -194,7 +192,6 @@ export class TablesService {
       return { availableTableSize: table.tableSize };
     }
 
-    console.log(bookings[`${timeSlot}`].availableTables);
     const largestAvailableTable = bookings[`${timeSlot}`].availableTables.sort(
       (a, b) => b.tableSize - a.tableSize,
     )[0];

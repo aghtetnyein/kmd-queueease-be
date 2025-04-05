@@ -22,8 +22,6 @@ export const AdminProfileResponseSchema: SchemaObject = createResponseSchema({
         id: { type: 'string' },
         name: { type: 'string' },
         location: { type: 'string' },
-        qrCode: { type: 'string' },
-        sharedLink: { type: 'string' },
         openDays: { type: 'array', items: { type: 'number' } },
         openHour: { type: 'string' },
         closeHour: { type: 'string' },
@@ -33,8 +31,6 @@ export const AdminProfileResponseSchema: SchemaObject = createResponseSchema({
       required: [
         'name',
         'location',
-        'qrCode',
-        'sharedLink',
         'openDays',
         'openHour',
         'closeHour',

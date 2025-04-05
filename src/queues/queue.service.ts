@@ -177,7 +177,6 @@ export class QueueService {
       waitlistCount + 1 - availableTableCount < 0
         ? 0
         : waitlistCount + 1 - availableTableCount;
-    console.log(waitlistCount, availableTableCount, totalCount);
     const estimatedWaitTime = totalCount * restaurant.slotDurationInMin;
 
     return {

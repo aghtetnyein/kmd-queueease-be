@@ -45,7 +45,6 @@ model Customer {
 
   orders        Order[]
   queues        Queue[]
-  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,9 +55,7 @@ model Restaurant {
   id                String @id @default(auto()) @map("_id") @db.ObjectId
   name              String
   slug              String @unique
-  location          String
-  qrCode            String
-  sharedLink        String
+  location          String?
   openDays          Int[]
   openHour          String
   closeHour         String
@@ -67,12 +64,11 @@ model Restaurant {
   admin   Admin  @relation(fields: [adminId], references: [id])
   adminId String @unique @db.ObjectId
 
-  meals         Meal[]
   tables        Table[]
-  staff         Staff[]
+  staffs         Staff[]
+  meals         Meal[]
   orders        Order[]
   queues        Queue[]
-  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -185,20 +181,6 @@ model Queue {
   position       Int?
 
   orders Order[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Notification {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  restaurantId String     @db.ObjectId
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  customerId   String     @db.ObjectId
-  customer     Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  message String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

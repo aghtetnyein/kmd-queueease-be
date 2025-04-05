@@ -11,7 +11,6 @@ function getHashedPassword(password: string) {
 // Helper function to clear all data
 async function clearDatabase() {
   const models = [
-    'notification',
     'meal',
     'order',
     'queue',
@@ -105,8 +104,6 @@ async function createRestaurant(adminId: string) {
       name: 'The Great Restaurant',
       slug: 'the-great-restaurant',
       location: '123 Main St',
-      qrCode: 'some-qr-code-1',
-      sharedLink: 'http://example.com/restaurant-1',
       openDays: [1, 2, 3, 4, 5],
       openHour: '10:00',
       closeHour: '22:00',
@@ -116,8 +113,6 @@ async function createRestaurant(adminId: string) {
       name: 'Sushi Paradise',
       slug: 'sushi-paradise',
       location: '456 Ocean Ave',
-      qrCode: 'some-qr-code-2',
-      sharedLink: 'http://example.com/restaurant-2',
       openDays: [1, 2, 3, 4, 5, 6],
       openHour: '11:00',
       closeHour: '23:00',
@@ -127,8 +122,6 @@ async function createRestaurant(adminId: string) {
       name: 'Italian Villa',
       slug: 'italian-villa',
       location: '789 Pasta Lane',
-      qrCode: 'some-qr-code-3',
-      sharedLink: 'http://example.com/restaurant-3',
       openDays: [2, 3, 4, 5, 6, 7],
       openHour: '12:00',
       closeHour: '21:00',
@@ -138,8 +131,6 @@ async function createRestaurant(adminId: string) {
       name: 'Spice Garden',
       slug: 'spice-garden',
       location: '321 Curry Road',
-      qrCode: 'some-qr-code-4',
-      sharedLink: 'http://example.com/restaurant-4',
       openDays: [1, 2, 3, 4, 5, 6, 7],
       openHour: '11:30',
       closeHour: '22:30',
@@ -149,8 +140,6 @@ async function createRestaurant(adminId: string) {
       name: 'BBQ House',
       slug: 'bbq-house',
       location: '567 Smoke Street',
-      qrCode: 'some-qr-code-5',
-      sharedLink: 'http://example.com/restaurant-5',
       openDays: [3, 4, 5, 6, 7],
       openHour: '16:00',
       closeHour: '23:00',
@@ -405,17 +394,6 @@ async function createOrders(
   return order;
 }
 
-// Create notifications
-async function createNotifications(restaurantId: string, customerId: string) {
-  return await prisma.notification.create({
-    data: {
-      restaurantId,
-      customerId,
-      message: 'Your table is ready!',
-    },
-  });
-}
-
 async function main() {
   await clearDatabase();
 
@@ -444,8 +422,6 @@ async function main() {
     restaurants[0].id,
     meals,
   );
-
-  await createNotifications(restaurants[0].id, customers[0].id);
 
   console.log('Seeding completed.');
 }

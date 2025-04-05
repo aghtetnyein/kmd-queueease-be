@@ -43,8 +43,6 @@ export class AdminService {
             id: true,
             name: true,
             location: true,
-            qrCode: true,
-            sharedLink: true,
             openDays: true,
             openHour: true,
             closeHour: true,

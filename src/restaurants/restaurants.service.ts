@@ -77,10 +77,7 @@ export class RestaurantService {
       data: {
         name: data.name,
         slug: data.name.toLowerCase().replace(/ /g, '-'),
-        // TODO: Generate QR code and shared link
         location: '',
-        qrCode: '',
-        sharedLink: '',
         openDays: [1, 2, 3, 4, 5],
         openHour: '10:00',
         closeHour: '22:00',
