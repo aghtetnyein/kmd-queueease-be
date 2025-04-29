@@ -24,14 +24,12 @@ export class MealsController {
   constructor(private readonly mealsService: MealsService) {}
 
   // Get all meals
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Get all meals',
     description: 'Get all meals',
   })
   @Get('')
-  getAllStaffs(
+  getAllMeals(
     @Query()
     query: {
       restaurant_id: string;

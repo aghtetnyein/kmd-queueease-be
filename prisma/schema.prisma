@@ -20,6 +20,11 @@ enum QueueStatus {
   COMPLETED
 }
 
+enum OrderStatus {
+  PREPARING
+  DELIVERED
+}
+
 // Admin model
 model Admin {
   id            String      @id @default(auto()) @map("_id") @db.ObjectId
@@ -139,6 +144,8 @@ model Order {
   restaurantId String     @db.ObjectId
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
+  status OrderStatus @default(PREPARING)
+
   meals OrderMeal[]
 
   createdAt DateTime @default(now())
@@ -174,6 +181,7 @@ model Queue {
   table        Table?      @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
   status         QueueStatus
+  initialStatus  QueueStatus
   progressStatus QueueProgressStatus
   tableStatus    TableStatus?         @default(AVAILABLE)
   partySize      Int

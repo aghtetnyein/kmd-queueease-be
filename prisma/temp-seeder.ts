@@ -341,6 +341,7 @@ async function createQueues(
         tableId,
         timeSlot,
         queueNo,
+        initialStatus: 'BOOKING',
       },
     });
     queues.push(newQueue);

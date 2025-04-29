@@ -58,13 +58,17 @@ export class MealsService {
     } else {
       [meals, total] = await Promise.all([
         this.prisma.meal.findMany({
-          where: { restaurantId: restaurant_id },
+          where: {
+            restaurantId: restaurant_id,
+          },
           skip,
           take: Number(page_size),
           orderBy: { createdAt: 'desc' },
         }),
         this.prisma.meal.count({
-          where: { restaurantId: restaurant_id },
+          where: {
+            restaurantId: restaurant_id,
+          },
         }),
       ]);
     }

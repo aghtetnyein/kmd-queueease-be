@@ -71,11 +71,25 @@ async function createTables(restaurantId: string) {
   return tables;
 }
 
+// Create customers
+async function createCustomers() {
+  return await prisma.customer.create({
+    data: {
+      phoneNo: '0621481906',
+      name: 'Sa Aung Htet Nyein',
+      isAccountCreated: true,
+      email: 'sasa@gmail.com',
+      password: getHashedPassword('User@123'),
+    },
+  });
+}
+
 async function main() {
   await clearDatabase();
-  // const admin = await createAdmin();
-  // const restaurant = await createRestaurant(admin.id);
-  // const tables = await createTables(restaurant.id);
+  const admin = await createAdmin();
+  const restaurant = await createRestaurant(admin.id);
+  const tables = await createTables(restaurant.id);
+  const customers = await createCustomers();
 
   return;
 }
