@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { TableStatus } from '@prisma/client';
 import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
 export class UpdateTableDto {
@@ -17,4 +18,12 @@ export class UpdateTableDto {
     description: 'The size of the table',
   })
   tableSize: number;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    example: 'AVAILABLE',
+    description: 'The status of the table',
+  })
+  status: TableStatus;
 }

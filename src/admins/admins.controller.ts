@@ -249,4 +249,31 @@ export class AdminController {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
   }
+
+  // insights
+  @ApiOperation({
+    summary: 'Get insights',
+    description: 'Admin can get insights',
+  })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('insights')
+  getInsights(@Req() req: Request) {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    try {
+      const decoded = this.jwtService.verify(token, {
+        secret: process.env.JWT_ADMIN_SECRET,
+      });
+      return this.adminService.getInsights(decoded.restaurantId);
+    } catch (error) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+  }
 }

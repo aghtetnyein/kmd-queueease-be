@@ -153,4 +153,279 @@ export class AdminService {
     });
     return { message: 'Password changed successfully' };
   }
+
+  async getInsights(restaurantId: string) {
+    const today = new Date();
+    const sevenDaysAgo = new Date(new Date().setDate(today.getDate() - 7));
+    const thirtyDaysAgo = new Date(new Date().setDate(today.getDate() - 30));
+
+    // 1. Queue Status Distribution
+    const queueStatusCounts = await this.prisma.queue.groupBy({
+      by: ['status'],
+      where: { restaurantId },
+      _count: true,
+    });
+
+    // 2. Table Utilization
+    const tables = await this.prisma.table.findMany({
+      where: { restaurantId },
+      include: { queues: true },
+    });
+
+    // 3. Orders and Revenue
+    const recentOrders = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        createdAt: { gte: sevenDaysAgo },
+      },
+      include: {
+        meals: {
+          include: {
+            meal: true,
+          },
+        },
+        queue: true,
+        customer: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // 4. Customer Data
+    const customerQueues = await this.prisma.queue.findMany({
+      where: {
+        restaurantId,
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      include: {
+        customer: true,
+        orders: {
+          include: {
+            meals: {
+              include: { meal: true },
+            },
+          },
+        },
+      },
+    });
+
+    // 5. Menu Performance
+    const orderMeals = await this.prisma.orderMeal.findMany({
+      where: {
+        order: { restaurantId },
+      },
+      include: {
+        meal: true,
+        order: true,
+      },
+    });
+
+    // Calculate all insights
+
+    // 1. Queue and Table Analytics
+    const queueAnalytics = {
+      currentStatus: {
+        bookings:
+          queueStatusCounts.find((q) => q.status === 'BOOKING')?._count || 0,
+        waitlist:
+          queueStatusCounts.find((q) => q.status === 'WAITLIST')?._count || 0,
+        serving:
+          queueStatusCounts.find((q) => q.status === 'SERVING')?._count || 0,
+        completed:
+          queueStatusCounts.find((q) => q.status === 'COMPLETED')?._count || 0,
+      },
+      tableUtilization: {
+        total: tables.length,
+        occupied: tables.filter((t) => t.status === 'RESERVED').length,
+        available: tables.filter((t) => t.status === 'AVAILABLE').length,
+        utilizationRate:
+          (tables.filter((t) => t.status === 'RESERVED').length /
+            tables.length) *
+          100,
+      },
+    };
+
+    // 2. Revenue Analytics
+    const dailyRevenue = recentOrders.reduce((acc, order) => {
+      const date = order.createdAt.toISOString().split('T')[0];
+      const revenue = order.meals.reduce(
+        (sum, item) => sum + item.quantity * item.meal.price,
+        0,
+      );
+      acc[date] = (acc[date] || 0) + revenue;
+      return acc;
+    }, {});
+
+    const revenueAnalytics = {
+      dailyRevenue,
+      totalRevenue: Object.values(dailyRevenue).reduce(
+        (a: number, b: number) => a + b,
+        0,
+      ),
+      averageOrderValue:
+        recentOrders.length > 0
+          ? recentOrders.reduce(
+              (sum, order) =>
+                sum +
+                order.meals.reduce(
+                  (mealSum, item) => mealSum + item.quantity * item.meal.price,
+                  0,
+                ),
+              0,
+            ) / recentOrders.length
+          : 0,
+    };
+
+    // 3. Customer Analytics
+    const customerVisits = customerQueues.reduce((acc, queue) => {
+      acc[queue.customerId] = (acc[queue.customerId] || 0) + 1;
+      return acc;
+    }, {});
+
+    const customerAnalytics = {
+      totalCustomers: Object.keys(customerVisits).length,
+      repeatCustomers: Object.values(customerVisits).filter(
+        (visits: number) => visits > 1,
+      ).length,
+      averagePartySize:
+        customerQueues.length > 0
+          ? customerQueues.reduce((sum, queue) => sum + queue.partySize, 0) /
+            customerQueues.length
+          : 0,
+      customerRetentionRate:
+        Object.keys(customerVisits).length > 0
+          ? (Object.values(customerVisits).filter(
+              (visits: number) => visits > 1,
+            ).length /
+              Object.keys(customerVisits).length) *
+            100
+          : 0,
+    };
+
+    // 4. Menu Analytics
+    const dishPopularity = orderMeals.reduce((acc, item) => {
+      if (!acc[item.mealId]) {
+        acc[item.mealId] = {
+          name: item.meal.name,
+          category: item.meal.category,
+          totalOrdered: 0,
+          revenue: 0,
+        };
+      }
+      acc[item.mealId].totalOrdered += item.quantity;
+      acc[item.mealId].revenue += item.quantity * item.meal.price;
+      return acc;
+    }, {});
+
+    // Calculate category performance
+    const categoryPerformance = Object.values(dishPopularity).reduce(
+      (acc, dish: any) => {
+        if (!acc[dish.category]) {
+          acc[dish.category] = {
+            totalOrders: 0,
+            revenue: 0,
+          };
+        }
+        acc[dish.category].totalOrders += dish.totalOrdered;
+        acc[dish.category].revenue += dish.revenue;
+        return acc;
+      },
+      {},
+    );
+
+    // 5. Operational Analytics
+    const hourlyDistribution = customerQueues.reduce((acc, queue) => {
+      const hour = new Date(queue.createdAt).getHours();
+      acc[hour] = (acc[hour] || 0) + 1;
+      return acc;
+    }, {});
+
+    const peakHours = Object.entries(hourlyDistribution)
+      .sort(([, a], [, b]) => (b as number) - (a as number))
+      .slice(0, 3)
+      .map(([hour, count]) => ({
+        hour: `${hour}:00`,
+        count: count as number,
+      }));
+
+    return {
+      // 1. Queue Status Distribution
+      queueStatus: {
+        labels: ['Bookings', 'Waitlist', 'Serving', 'Completed'],
+        data: [
+          queueStatusCounts.find((q) => q.status === 'BOOKING')?._count || 0,
+          queueStatusCounts.find((q) => q.status === 'WAITLIST')?._count || 0,
+          queueStatusCounts.find((q) => q.status === 'SERVING')?._count || 0,
+          queueStatusCounts.find((q) => q.status === 'COMPLETED')?._count || 0,
+        ],
+      },
+
+      // 2. Table Utilization
+      tableUtilization: {
+        labels: ['Occupied', 'Available'],
+        data: [
+          tables.filter((t) => t.status === 'RESERVED').length,
+          tables.filter((t) => t.status === 'AVAILABLE').length,
+        ],
+      },
+
+      // 3. Daily Revenue (Last 7 Days)
+      dailyRevenue: {
+        labels: Object.keys(dailyRevenue).map((date) =>
+          new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+        ),
+        data: Object.values(dailyRevenue),
+      },
+
+      // 4. Popular Dishes
+      popularDishes: {
+        labels: Object.values(dishPopularity)
+          .sort((a: any, b: any) => b.totalOrdered - a.totalOrdered)
+          .slice(0, 5)
+          .map((dish: any) => dish.name),
+        data: Object.values(dishPopularity)
+          .sort((a: any, b: any) => b.totalOrdered - a.totalOrdered)
+          .slice(0, 5)
+          .map((dish: any) => dish.totalOrdered),
+      },
+
+      // 5. Category Performance
+      categoryPerformance: {
+        labels: Object.keys(categoryPerformance),
+        data: Object.values(categoryPerformance).map((cat) => cat.totalOrders),
+      },
+
+      // 6. Peak Hours
+      peakHours: {
+        labels: peakHours.map((ph) => ph.hour),
+        data: peakHours.map((ph) => ph.count),
+      },
+
+      // 7. Customer Retention
+      customerRetention: {
+        labels: ['New Customers', 'Repeat Customers'],
+        data: [
+          Object.keys(customerVisits).length -
+            Object.values(customerVisits).filter((visits: number) => visits > 1)
+              .length,
+          Object.values(customerVisits).filter((visits: number) => visits > 1)
+            .length,
+        ],
+      },
+
+      // 8. Average Party Size Distribution
+      partySize: {
+        labels: ['1-2', '3-4', '5-6', '7+'],
+        data: [
+          customerQueues.filter((q) => q.partySize <= 2).length,
+          customerQueues.filter((q) => q.partySize > 2 && q.partySize <= 4)
+            .length,
+          customerQueues.filter((q) => q.partySize > 4 && q.partySize <= 6)
+            .length,
+          customerQueues.filter((q) => q.partySize > 6).length,
+        ],
+      },
+    };
+  }
 }

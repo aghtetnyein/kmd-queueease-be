@@ -84,12 +84,34 @@ async function createCustomers() {
   });
 }
 
+async function createMeals(restaurantId: string) {
+  const mealsData = [
+    { name: 'Burger', price: 60, category: 'Fast Food' },
+    { name: 'Broccoli', price: 10, category: 'Vegetables' },
+    { name: 'Salad', price: 10, category: 'Salad' },
+    { name: 'Soup', price: 10, category: 'Soup' },
+    { name: 'Beef', price: 80, category: 'Meat' },
+    { name: 'Chicken', price: 70, category: 'Meat' },
+    { name: 'Fish', price: 90, category: 'Meat' },
+  ];
+
+  for (const meal of mealsData) {
+    await prisma.meal.create({
+      data: {
+        ...meal,
+        restaurantId,
+      },
+    });
+  }
+}
+
 async function main() {
   await clearDatabase();
   const admin = await createAdmin();
   const restaurant = await createRestaurant(admin.id);
-  const tables = await createTables(restaurant.id);
-  const customers = await createCustomers();
+  await createTables(restaurant.id);
+  await createCustomers();
+  await createMeals(restaurant.id);
 
   return;
 }
