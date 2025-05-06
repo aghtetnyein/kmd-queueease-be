@@ -41,6 +41,7 @@ import { JwtAuthGuard as AdminJwtAuthGuard } from 'src/admins/guards/jwt-auth.gu
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { PlaceOrderDto } from './dto/place-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @Controller('customers')
 @UseFilters(HttpExceptionFilter)
@@ -209,6 +210,19 @@ export class CustomersController {
     } catch (error) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
+  }
+
+  // Update customer
+  @ApiOperation({
+    summary: 'Customer profile update',
+    description: 'Customer can update their profile',
+  })
+  @UseGuards(CustomerJwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateCustomerDto })
+  @Post('update-profile')
+  updateCustomer(@Body() updateCustomerDto: UpdateCustomerDto) {
+    return this.customersService.update(updateCustomerDto);
   }
 
   // Delete customer

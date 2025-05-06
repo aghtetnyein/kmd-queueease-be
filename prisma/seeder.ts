@@ -107,11 +107,11 @@ async function createMeals(restaurantId: string) {
 
 async function main() {
   await clearDatabase();
-  const admin = await createAdmin();
-  const restaurant = await createRestaurant(admin.id);
-  await createTables(restaurant.id);
-  await createCustomers();
-  await createMeals(restaurant.id);
+  // const admin = await createAdmin();
+  // const restaurant = await createRestaurant(admin.id);
+  // await createTables(restaurant.id);
+  // await createCustomers();
+  // await createMeals(restaurant.id);
 
   return;
 }

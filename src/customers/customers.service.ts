@@ -14,6 +14,7 @@ import { omit } from 'lodash';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { Customer, OrderStatus, QueueStatus } from '@prisma/client';
 import { PlaceOrderDto } from './dto/place-order.dto';
+import { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @Injectable()
 export class CustomersService {
@@ -141,6 +142,7 @@ export class CustomersService {
       const customer = await this.prisma.customer.create({
         data: {
           ...registerNewCustomerDto,
+          password: getHashedPassword(registerNewCustomerDto.password),
           isAccountCreated: true,
         },
       });
@@ -216,6 +218,20 @@ export class CustomersService {
       data: { password: hashedPassword },
     });
     return { message: 'Password changed successfully' };
+  }
+
+  async update(updateCustomerDto: UpdateCustomerDto) {
+    const customer = await this.validateCustomerAccountByPhoneNo(
+      updateCustomerDto.phoneNo,
+    );
+    if (!customer) {
+      throw new HttpException('Customer not found', HttpStatus.NOT_FOUND);
+    }
+    await this.prisma.customer.update({
+      where: { id: customer.id },
+      data: updateCustomerDto,
+    });
+    return { message: 'Customer updated successfully' };
   }
 
   async deleteCustomer(id: string) {
