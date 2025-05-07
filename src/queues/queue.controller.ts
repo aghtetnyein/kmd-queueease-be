@@ -93,9 +93,9 @@ export class QueueController {
     summary: 'Get a queue by id',
     description: 'Get a queue by id',
   })
-  @Get(':id')
-  getQueueById(@Param('id') id: string) {
-    return this.queueService.getQueueById(id);
+  @Get(':queueNo')
+  getQueueByQueueNo(@Param('queueNo') queueNo: string) {
+    return this.queueService.getQueueByQueueNo(queueNo);
   }
 
   // Update a queue status

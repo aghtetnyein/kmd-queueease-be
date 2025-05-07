@@ -39,11 +39,9 @@ export class TablesService {
       [tables, total] = await Promise.all([
         this.prisma.table.findMany({
           where: {
-            AND: [
-              { restaurantId: restaurant_id },
-              { tableNo: { contains: search, mode: 'insensitive' } },
-              { ...statusFilter },
-            ],
+            restaurantId: restaurant_id,
+            tableNo: { contains: search, mode: 'insensitive' },
+            ...statusFilter,
           },
           skip,
           take: Number(page_size),
@@ -51,11 +49,9 @@ export class TablesService {
         }),
         this.prisma.table.count({
           where: {
-            AND: [
-              { restaurantId: restaurant_id },
-              { tableNo: { contains: search, mode: 'insensitive' } },
-              { ...statusFilter },
-            ],
+            restaurantId: restaurant_id,
+            tableNo: { contains: search, mode: 'insensitive' },
+            ...statusFilter,
           },
         }),
       ]);

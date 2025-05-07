@@ -166,6 +166,12 @@ export class AdminService {
       _count: true,
     });
 
+    const initialQueueStatusCounts = await this.prisma.queue.groupBy({
+      by: ['initialStatus'],
+      where: { restaurantId },
+      _count: true,
+    });
+
     // 2. Table Utilization
     const tables = await this.prisma.table.findMany({
       where: { restaurantId },
@@ -222,30 +228,6 @@ export class AdminService {
     });
 
     // Calculate all insights
-
-    // 1. Queue and Table Analytics
-    const queueAnalytics = {
-      currentStatus: {
-        bookings:
-          queueStatusCounts.find((q) => q.status === 'BOOKING')?._count || 0,
-        waitlist:
-          queueStatusCounts.find((q) => q.status === 'WAITLIST')?._count || 0,
-        serving:
-          queueStatusCounts.find((q) => q.status === 'SERVING')?._count || 0,
-        completed:
-          queueStatusCounts.find((q) => q.status === 'COMPLETED')?._count || 0,
-      },
-      tableUtilization: {
-        total: tables.length,
-        occupied: tables.filter((t) => t.status === 'RESERVED').length,
-        available: tables.filter((t) => t.status === 'AVAILABLE').length,
-        utilizationRate:
-          (tables.filter((t) => t.status === 'RESERVED').length /
-            tables.length) *
-          100,
-      },
-    };
-
     // 2. Revenue Analytics
     const dailyRevenue = recentOrders.reduce((acc, order) => {
       const date = order.createdAt.toISOString().split('T')[0];
@@ -257,51 +239,11 @@ export class AdminService {
       return acc;
     }, {});
 
-    const revenueAnalytics = {
-      dailyRevenue,
-      totalRevenue: Object.values(dailyRevenue).reduce(
-        (a: number, b: number) => a + b,
-        0,
-      ),
-      averageOrderValue:
-        recentOrders.length > 0
-          ? recentOrders.reduce(
-              (sum, order) =>
-                sum +
-                order.meals.reduce(
-                  (mealSum, item) => mealSum + item.quantity * item.meal.price,
-                  0,
-                ),
-              0,
-            ) / recentOrders.length
-          : 0,
-    };
-
     // 3. Customer Analytics
     const customerVisits = customerQueues.reduce((acc, queue) => {
       acc[queue.customerId] = (acc[queue.customerId] || 0) + 1;
       return acc;
     }, {});
-
-    const customerAnalytics = {
-      totalCustomers: Object.keys(customerVisits).length,
-      repeatCustomers: Object.values(customerVisits).filter(
-        (visits: number) => visits > 1,
-      ).length,
-      averagePartySize:
-        customerQueues.length > 0
-          ? customerQueues.reduce((sum, queue) => sum + queue.partySize, 0) /
-            customerQueues.length
-          : 0,
-      customerRetentionRate:
-        Object.keys(customerVisits).length > 0
-          ? (Object.values(customerVisits).filter(
-              (visits: number) => visits > 1,
-            ).length /
-              Object.keys(customerVisits).length) *
-            100
-          : 0,
-    };
 
     // 4. Menu Analytics
     const dishPopularity = orderMeals.reduce((acc, item) => {
@@ -354,8 +296,10 @@ export class AdminService {
       queueStatus: {
         labels: ['Bookings', 'Waitlist', 'Serving', 'Completed'],
         data: [
-          queueStatusCounts.find((q) => q.status === 'BOOKING')?._count || 0,
-          queueStatusCounts.find((q) => q.status === 'WAITLIST')?._count || 0,
+          initialQueueStatusCounts.find((q) => q.initialStatus === 'BOOKING')
+            ?._count || 0,
+          initialQueueStatusCounts.find((q) => q.initialStatus === 'WAITLIST')
+            ?._count || 0,
           queueStatusCounts.find((q) => q.status === 'SERVING')?._count || 0,
           queueStatusCounts.find((q) => q.status === 'COMPLETED')?._count || 0,
         ],

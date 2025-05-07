@@ -63,6 +63,11 @@ export class QueueService {
       include: {
         table: true,
         customer: true,
+        _count: {
+          select: {
+            orders: true,
+          },
+        },
       },
     });
 
@@ -292,9 +297,9 @@ export class QueueService {
     return queue;
   }
 
-  async getQueueById(id: string) {
+  async getQueueByQueueNo(queueNo: string) {
     const queue = await this.prisma.queue.findUnique({
-      where: { id },
+      where: { queueNo },
       include: {
         table: true,
         customer: true,
@@ -336,10 +341,6 @@ export class QueueService {
         waitlistCount: totalCount,
         estimatedWaitTime,
       };
-    }
-
-    if (queue.status === 'SERVING') {
-      throw new BadRequestException('Queue is already serving');
     }
 
     return queue;
